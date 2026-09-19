@@ -12,11 +12,13 @@ public sealed class PlayerCombatController : MonoBehaviour
     [SerializeField] private float attackRadius = 0.9f;
     [SerializeField] private float baseDamage = 34f;
     [SerializeField] private float counterDamageMultiplier = 2f;
+    [SerializeField] private float ultimateGainPerHit = 4f;
 
     private GameInput input;
     private TargetingSystem targetingSystem;
     private DodgeController dodgeController;
     private PerfectDodgeSystem perfectDodgeSystem;
+    private PlayerSkillController skillController;
     private GameObject weaponVisual;
     private Material weaponMaterial;
     private float attackTimer;
@@ -32,7 +34,8 @@ public sealed class PlayerCombatController : MonoBehaviour
         GameInput gameInput,
         TargetingSystem targeting,
         DodgeController dodge,
-        PerfectDodgeSystem perfectDodge)
+        PerfectDodgeSystem perfectDodge,
+        PlayerSkillController skills)
     {
         if (gameInput == null)
         {
@@ -54,10 +57,17 @@ public sealed class PlayerCombatController : MonoBehaviour
             throw new System.ArgumentNullException(nameof(perfectDodge));
         }
 
+        if (skills == null)
+        {
+            throw new System.ArgumentNullException(nameof(skills));
+        }
+
         input = gameInput;
         targetingSystem = targeting;
         dodgeController = dodge;
         perfectDodgeSystem = perfectDodge;
+        skillController = skills;
+
         CreateWeaponVisual();
     }
 
@@ -74,6 +84,11 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
+        if (input.Pause.WasPressedThisFrame())
+        {
+            return;
+        }
+
         HandleAttackInput();
 
         if (IsAttacking)
@@ -83,6 +98,7 @@ public sealed class PlayerCombatController : MonoBehaviour
         else if (comboTimer > 0f)
         {
             comboTimer -= Time.deltaTime;
+
             if (comboTimer <= 0f)
             {
                 comboStep = 0;
@@ -103,9 +119,10 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        int nextStep = comboTimer > 0f
-            ? Mathf.Clamp(comboStep + 1, 1, 3)
-            : 1;
+        int nextStep =
+            comboTimer > 0f
+                ? Mathf.Clamp(comboStep + 1, 1, 3)
+                : 1;
 
         StartAttack(nextStep);
     }
@@ -119,6 +136,8 @@ public sealed class PlayerCombatController : MonoBehaviour
         queuedAttack = false;
         IsAttacking = true;
 
+        AudioDirector.Instance?.PlayAttack();
+
         if (weaponVisual != null)
         {
             weaponVisual.SetActive(true);
@@ -129,7 +148,11 @@ public sealed class PlayerCombatController : MonoBehaviour
     {
         attackTimer += Time.deltaTime;
 
-        float normalized = Mathf.Clamp01(attackTimer / Mathf.Max(0.001f, attackDuration));
+        float normalized =
+            Mathf.Clamp01(
+                attackTimer
+                / Mathf.Max(0.001f, attackDuration));
+
         AnimateWeapon(normalized);
 
         if (!hasHitThisAttack
@@ -146,7 +169,11 @@ public sealed class PlayerCombatController : MonoBehaviour
         }
 
         bool shouldContinueCombo = queuedAttack;
-        int nextStep = Mathf.Clamp(comboStep + 1, 1, 3);
+        int nextStep =
+            Mathf.Clamp(
+                comboStep + 1,
+                1,
+                3);
 
         IsAttacking = false;
 
@@ -178,9 +205,13 @@ public sealed class PlayerCombatController : MonoBehaviour
     {
         Vector3 direction = transform.forward;
 
-        if (targetingSystem != null && targetingSystem.CurrentTarget != null)
+        if (targetingSystem != null
+            && targetingSystem.CurrentTarget != null)
         {
-            direction = targetingSystem.CurrentTarget.position - transform.position;
+            direction =
+                targetingSystem.CurrentTarget.position
+                - transform.position;
+
             direction.y = 0f;
 
             if (direction.sqrMagnitude > 0.01f)
@@ -193,17 +224,20 @@ public sealed class PlayerCombatController : MonoBehaviour
             }
         }
 
-        Vector3 center = transform.position
+        Vector3 center =
+            transform.position
             + Vector3.up * 1.1f
             + direction * (attackRange * 0.55f);
 
-        Collider[] colliders = Physics.OverlapSphere(
-            center,
-            attackRadius,
-            Physics.DefaultRaycastLayers,
-            QueryTriggerInteraction.Ignore);
+        Collider[] colliders =
+            Physics.OverlapSphere(
+                center,
+                attackRadius,
+                Physics.DefaultRaycastLayers,
+                QueryTriggerInteraction.Ignore);
 
-        HashSet<EnemyController> uniqueTargets = new HashSet<EnemyController>();
+        HashSet<EnemyController> uniqueTargets =
+            new HashSet<EnemyController>();
 
         foreach (Collider collider in colliders)
         {
@@ -212,63 +246,107 @@ public sealed class PlayerCombatController : MonoBehaviour
                 continue;
             }
 
-            EnemyController target = collider.GetComponentInParent<EnemyController>();
-            if (target == null || !target.IsAlive || !uniqueTargets.Add(target))
+            EnemyController target =
+                collider.GetComponentInParent<EnemyController>();
+
+            if (target == null
+                || !target.IsAlive
+                || !uniqueTargets.Add(target))
             {
                 continue;
             }
 
-            float damageMultiplier = comboStep switch
-            {
-                1 => 1f,
-                2 => 1.15f,
-                3 => 1.4f,
-                _ => 1f
-            };
+            float damageMultiplier =
+                comboStep switch
+                {
+                    1 => 1f,
+                    2 => 1.15f,
+                    3 => 1.4f,
+                    _ => 1f
+                };
 
-            if (perfectDodgeSystem != null && perfectDodgeSystem.CounterWindowActive)
+            if (perfectDodgeSystem != null
+                && perfectDodgeSystem.CounterWindowActive)
             {
-                damageMultiplier *= counterDamageMultiplier;
+                damageMultiplier *=
+                    counterDamageMultiplier;
             }
 
-            target.TakeDamage(baseDamage * damageMultiplier, direction, true);
+            target.TakeDamage(
+                baseDamage * damageMultiplier,
+                direction,
+                true);
+
+            skillController?.AddUltimateGauge(
+                ultimateGainPerHit);
+
+            AudioDirector.Instance?.PlayHit();
         }
     }
 
     private void CreateWeaponVisual()
     {
-        weaponVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        weaponVisual.name = "PrototypeEnergyBlade";
-        weaponVisual.transform.SetParent(transform, false);
-        weaponVisual.transform.localPosition = new Vector3(0f, 1.05f, 0.85f);
-        weaponVisual.transform.localScale = new Vector3(0.11f, 0.12f, 1.55f);
+        weaponVisual =
+            GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
 
-        Collider collider = weaponVisual.GetComponent<Collider>();
+        weaponVisual.name =
+            "PrototypeEnergyBlade";
+
+        weaponVisual.transform.SetParent(
+            transform,
+            false);
+
+        weaponVisual.transform.localPosition =
+            new Vector3(0f, 1.05f, 0.85f);
+
+        weaponVisual.transform.localScale =
+            new Vector3(
+                0.11f,
+                0.12f,
+                1.55f);
+
+        Collider collider =
+            weaponVisual.GetComponent<Collider>();
+
         if (collider != null)
         {
             Destroy(collider);
         }
 
-        Renderer renderer = weaponVisual.GetComponent<Renderer>();
+        Renderer renderer =
+            weaponVisual.GetComponent<Renderer>();
+
         if (renderer == null)
         {
-            throw new System.InvalidOperationException("Failed to create the prototype weapon renderer.");
+            throw new System.InvalidOperationException(
+                "Failed to create the prototype weapon renderer.");
         }
 
-        Shader shader = Shader.Find("Universal Render Pipeline/Lit")
+        Shader shader =
+            Shader.Find(
+                "Universal Render Pipeline/Lit")
             ?? Shader.Find("Standard");
 
         if (shader == null)
         {
-            throw new System.InvalidOperationException("No compatible Unity material shader was found.");
+            throw new System.InvalidOperationException(
+                "No compatible Unity material shader was found.");
         }
 
-        weaponMaterial = new Material(shader)
-        {
-            color = new Color(0.2f, 0.95f, 1f)
-        };
+        weaponMaterial =
+            new Material(shader)
+            {
+                color =
+                    new Color(
+                        0.2f,
+                        0.95f,
+                        1f)
+            };
 
-        renderer.material = weaponMaterial;
+        renderer.material =
+            weaponMaterial;
+
         weaponVisual.SetActive(false);
     }
 
@@ -279,18 +357,28 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        float angle = Mathf.Lerp(-75f, 75f, normalizedTime);
-        float lift = Mathf.Sin(normalizedTime * Mathf.PI) * 0.12f;
+        float angle =
+            Mathf.Lerp(
+                -75f,
+                75f,
+                normalizedTime);
 
-        weaponVisual.transform.localPosition = new Vector3(
-            0f,
-            1.05f + lift,
-            0.85f);
+        float lift =
+            Mathf.Sin(
+                normalizedTime * Mathf.PI)
+            * 0.12f;
 
-        weaponVisual.transform.localRotation = Quaternion.Euler(
-            15f,
-            angle,
-            35f - angle * 0.45f);
+        weaponVisual.transform.localPosition =
+            new Vector3(
+                0f,
+                1.05f + lift,
+                0.85f);
+
+        weaponVisual.transform.localRotation =
+            Quaternion.Euler(
+                15f,
+                angle,
+                35f - angle * 0.45f);
     }
 
     private void OnDestroy()
