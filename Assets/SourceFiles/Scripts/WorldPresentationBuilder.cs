@@ -20,6 +20,7 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
         GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "FutureRuinedGround";
         ground.transform.localScale = new Vector3(7f, 1f, 7f);
+        ground.transform.position = new Vector3(0f, -0.03f, 0f);
 
         ApplyMaterial(
             ground,
@@ -92,9 +93,9 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
 
     private void CreateEnergyRails()
     {
-        for (int i = -4; i <= 4; i++)
+        for (int i = -2; i <= 2; i++)
         {
-            float position = i * 6f;
+            float position = i * 9f;
 
             CreateGlow(
                 new Vector3(position, 0.04f, 0f),
@@ -218,8 +219,8 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
         GameObject lightObject = new GameObject("FutureSun");
         Light light = lightObject.AddComponent<Light>();
         light.type = LightType.Directional;
-        light.intensity = 0.95f;
-        light.color = new Color(0.75f, 0.86f, 1f);
+        light.intensity = 1.15f;
+        light.color = new Color(0.68f, 0.78f, 0.95f);
         lightObject.transform.rotation =
             Quaternion.Euler(42f, -32f, 0f);
 
@@ -231,7 +232,7 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
         RenderSettings.fog = true;
         RenderSettings.fogColor =
             new Color(0.015f, 0.025f, 0.05f);
-        RenderSettings.fogDensity = 0.009f;
+        RenderSettings.fogDensity = 0.0065f;
     }
 
     private static void CreateBlock(
