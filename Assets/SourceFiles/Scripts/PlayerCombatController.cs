@@ -59,6 +59,12 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
+        if (dodgeController.IsDodging)
+        {
+            CancelAttack();
+            return;
+        }
+
         HandleAttackInput();
 
         if (IsAttacking)
@@ -78,11 +84,6 @@ public sealed class PlayerCombatController : MonoBehaviour
     private void HandleAttackInput()
     {
         if (!input.NormalAttack.WasPressedThisFrame())
-        {
-            return;
-        }
-
-        if (dodgeController.IsDodging)
         {
             return;
         }
@@ -135,6 +136,9 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
+        bool shouldContinueCombo = queuedAttack;
+        int nextStep = Mathf.Clamp(comboStep + 1, 1, 3);
+
         IsAttacking = false;
 
         if (weaponVisual != null)
@@ -142,11 +146,22 @@ public sealed class PlayerCombatController : MonoBehaviour
             weaponVisual.SetActive(false);
         }
 
-        if (queuedAttack)
+        if (shouldContinueCombo)
         {
-            queuedAttack = false;
-            int nextStep = Mathf.Clamp(comboStep + 1, 1, 3);
             StartAttack(nextStep);
+        }
+    }
+
+    public void CancelAttack()
+    {
+        IsAttacking = false;
+        queuedAttack = false;
+        attackTimer = 0f;
+        hasHitThisAttack = false;
+
+        if (weaponVisual != null)
+        {
+            weaponVisual.SetActive(false);
         }
     }
 
@@ -158,6 +173,7 @@ public sealed class PlayerCombatController : MonoBehaviour
         {
             direction = targetingSystem.CurrentTarget.position - transform.position;
             direction.y = 0f;
+
             if (direction.sqrMagnitude > 0.01f)
             {
                 direction.Normalize();
@@ -168,7 +184,10 @@ public sealed class PlayerCombatController : MonoBehaviour
             }
         }
 
-        Vector3 center = transform.position + Vector3.up * 1.1f + direction * (attackRange * 0.55f);
+        Vector3 center = transform.position
+            + Vector3.up * 1.1f
+            + direction * (attackRange * 0.55f);
+
         Collider[] colliders = Physics.OverlapSphere(
             center,
             attackRadius,
