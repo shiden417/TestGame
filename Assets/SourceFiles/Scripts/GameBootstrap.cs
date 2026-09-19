@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 [DisallowMultipleComponent]
 public sealed class GameBootstrap : MonoBehaviour
@@ -25,9 +26,9 @@ public sealed class GameBootstrap : MonoBehaviour
         Time.fixedDeltaTime = 0.02f;
 
         CreateCoreSystems();
+        CreateCamera();
         CreateWorld();
         CreatePlayer();
-        CreateCamera();
         WirePlayerSystems();
         CreateHud();
     }
@@ -161,12 +162,38 @@ public sealed class GameBootstrap : MonoBehaviour
         Camera camera =
             cameraObject.AddComponent<Camera>();
 
+        if (camera == null)
+        {
+            throw new System.InvalidOperationException(
+                "Main Camera could not be created.");
+        }
+
         cameraObject.tag =
             "MainCamera";
 
+        camera.enabled = true;
         camera.fieldOfView = 64f;
         camera.nearClipPlane = 0.05f;
         camera.farClipPlane = 240f;
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0.008f, 0.012f, 0.024f);
+
+        UniversalAdditionalCameraData cameraData =
+            cameraObject.GetComponent<UniversalAdditionalCameraData>();
+
+        if (cameraData == null)
+        {
+            cameraData =
+                cameraObject.AddComponent<UniversalAdditionalCameraData>();
+        }
+
+        if (cameraData == null)
+        {
+            throw new System.InvalidOperationException(
+                "Universal Additional Camera Data could not be created.");
+        }
+
+        cameraData.renderType = CameraRenderType.Base;
 
         cameraController =
             cameraObject.AddComponent<
