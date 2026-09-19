@@ -1,67 +1,156 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour
+[DisallowMultipleComponent]
+public sealed class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 6f;
-    [SerializeField] private float jumpHeight = 1.6f;
-    [SerializeField] private float gravity = -20f;
+    [SerializeField] private float moveSpeed = 6.5f;
+    [SerializeField] private float acceleration = 28f;
+    [SerializeField] private float deceleration = 34f;
+    [SerializeField] private float rotationSpeed = 18f;
+    [SerializeField] private float jumpHeight = 1.5f;
+    [SerializeField] private float gravity = -22f;
 
-    private CharacterController controller;
+    private CharacterController characterController;
+    private GameInput input;
+    private ThirdPersonCameraController cameraController;
+    private TargetingSystem targetingSystem;
+    private DodgeController dodgeController;
+    private Vector3 horizontalVelocity;
     private float verticalVelocity;
+
+    public bool IsGrounded => characterController != null && characterController.isGrounded;
+
+    public void Initialize(
+        GameInput gameInput,
+        ThirdPersonCameraController camera,
+        TargetingSystem targeting,
+        DodgeController dodge)
+    {
+        if (gameInput == null)
+        {
+            throw new System.ArgumentNullException(nameof(gameInput));
+        }
+
+        if (camera == null)
+        {
+            throw new System.ArgumentNullException(nameof(camera));
+        }
+
+        if (targeting == null)
+        {
+            throw new System.ArgumentNullException(nameof(targeting));
+        }
+
+        if (dodge == null)
+        {
+            throw new System.ArgumentNullException(nameof(dodge));
+        }
+
+        characterController = GetComponent<CharacterController>();
+        input = gameInput;
+        cameraController = camera;
+        targetingSystem = targeting;
+        dodgeController = dodge;
+    }
 
     private void Awake()
     {
-        controller = GetComponent<CharacterController>();
+        characterController = GetComponent<CharacterController>();
     }
 
     private void Update()
     {
-        Vector2 input = ReadMovementInput();
-        Vector3 direction = new Vector3(input.x, 0f, input.y);
-
-        if (direction.sqrMagnitude > 1f)
+        if (characterController == null
+            || input == null
+            || cameraController == null
+            || targetingSystem == null
+            || dodgeController == null)
         {
-            direction.Normalize();
+            return;
         }
 
-        controller.Move(direction * moveSpeed * Time.deltaTime);
+        if (dodgeController.IsDodging)
+        {
+            return;
+        }
 
-        if (controller.isGrounded && verticalVelocity < 0f)
+        UpdateVerticalVelocity();
+        UpdateHorizontalMovement();
+        ApplyMovement();
+        UpdateRotation();
+    }
+
+    private void UpdateVerticalVelocity()
+    {
+        if (characterController.isGrounded && verticalVelocity < 0f)
         {
             verticalVelocity = -2f;
         }
 
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame && controller.isGrounded)
+        if (input.Jump.WasPressedThisFrame() && characterController.isGrounded)
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
         verticalVelocity += gravity * Time.deltaTime;
-        controller.Move(Vector3.up * verticalVelocity * Time.deltaTime);
-
-        if (direction.sqrMagnitude > 0.01f)
-        {
-            transform.forward = Vector3.Slerp(transform.forward, direction, 12f * Time.deltaTime);
-        }
     }
 
-    private static Vector2 ReadMovementInput()
+    private void UpdateHorizontalMovement()
     {
-        if (Keyboard.current == null)
+        Vector2 movementInput = input.Move.ReadValue<Vector2>();
+        Vector3 desiredDirection = cameraController.Right * movementInput.x
+            + cameraController.Forward * movementInput.y;
+
+        desiredDirection.y = 0f;
+
+        if (desiredDirection.sqrMagnitude > 1f)
         {
-            return Vector2.zero;
+            desiredDirection.Normalize();
         }
 
-        float x = 0f;
-        float y = 0f;
+        float targetSpeed = desiredDirection.magnitude * moveSpeed;
+        Vector3 targetVelocity = desiredDirection.normalized * targetSpeed;
 
-        if (Keyboard.current.aKey.isPressed) x -= 1f;
-        if (Keyboard.current.dKey.isPressed) x += 1f;
-        if (Keyboard.current.sKey.isPressed) y -= 1f;
-        if (Keyboard.current.wKey.isPressed) y += 1f;
+        float rate = targetSpeed > 0.01f ? acceleration : deceleration;
+        horizontalVelocity = Vector3.MoveTowards(
+            horizontalVelocity,
+            targetVelocity,
+            rate * Time.deltaTime);
+    }
 
-        return new Vector2(x, y);
+    private void ApplyMovement()
+    {
+        Vector3 movement = horizontalVelocity;
+        movement.y = verticalVelocity;
+        characterController.Move(movement * Time.deltaTime);
+    }
+
+    private void UpdateRotation()
+    {
+        Transform lockTarget = targetingSystem.CurrentTarget;
+
+        Vector3 lookDirection;
+        if (lockTarget != null)
+        {
+            lookDirection = lockTarget.position - transform.position;
+            lookDirection.y = 0f;
+        }
+        else
+        {
+            lookDirection = horizontalVelocity;
+            lookDirection.y = 0f;
+        }
+
+        if (lookDirection.sqrMagnitude < 0.01f)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime);
     }
 }
