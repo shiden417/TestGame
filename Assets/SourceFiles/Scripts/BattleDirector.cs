@@ -4,6 +4,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class BattleDirector : MonoBehaviour
 {
+    [SerializeField] private int maximumSimultaneousAttackers = 5;
+
     private readonly List<EnemyController> activeEnemies = new();
 
     private Transform player;
@@ -47,6 +49,7 @@ public sealed class BattleDirector : MonoBehaviour
         for (int i = activeEnemies.Count - 1; i >= 0; i--)
         {
             EnemyController enemy = activeEnemies[i];
+
             if (enemy == null)
             {
                 activeEnemies.RemoveAt(i);
@@ -57,35 +60,52 @@ public sealed class BattleDirector : MonoBehaviour
             {
                 activeEnemies.RemoveAt(i);
                 totalDefeated++;
-
                 stageDirector?.NotifyEnemyDefeated(enemy);
             }
         }
     }
 
-    public int GetActiveAttackerBudget()
+    public bool CanEnemyAttack(EnemyController candidate)
     {
-        if (player == null)
+        if (candidate == null || candidate.IsBoss)
         {
-            return 0;
+            return true;
         }
 
-        int nearby = 0;
+        int attackers = 0;
+
         foreach (EnemyController enemy in activeEnemies)
         {
-            if (enemy == null || !enemy.IsAlive || enemy.IsBoss)
+            if (enemy == null || !enemy.IsAlive || enemy.IsBoss || enemy == candidate)
             {
                 continue;
             }
 
-            float distance = Vector3.Distance(enemy.transform.position, player.position);
-            if (distance <= 5f)
+            if (!enemy.IsAttackCommitmentActive)
             {
-                nearby++;
+                continue;
+            }
+
+            if (player != null)
+            {
+                float distance = Vector3.Distance(
+                    new Vector3(enemy.transform.position.x, 0f, enemy.transform.position.z),
+                    new Vector3(player.position.x, 0f, player.position.z));
+
+                if (distance > 7f)
+                {
+                    continue;
+                }
+            }
+
+            attackers++;
+            if (attackers >= maximumSimultaneousAttackers)
+            {
+                return false;
             }
         }
 
-        return Mathf.Min(6, nearby);
+        return true;
     }
 
     public bool HasLivingBoss()
@@ -101,16 +121,22 @@ public sealed class BattleDirector : MonoBehaviour
         return false;
     }
 
-    public float GetBossHealth()
+    public EnemyController GetLivingBoss()
     {
         foreach (EnemyController enemy in activeEnemies)
         {
             if (enemy != null && enemy.IsAlive && enemy.IsBoss)
             {
-                return enemy.CurrentHealth;
+                return enemy;
             }
         }
 
-        return 0f;
+        return null;
+    }
+
+    public float GetBossHealth()
+    {
+        EnemyController boss = GetLivingBoss();
+        return boss != null ? boss.CurrentHealth : 0f;
     }
 }
