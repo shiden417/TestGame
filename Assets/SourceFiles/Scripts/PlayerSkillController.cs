@@ -48,7 +48,6 @@ public sealed class PlayerSkillController : MonoBehaviour
 
         input = gameInput;
         perfectDodgeSystem = perfectDodge;
-        CreateSkillVisual();
     }
 
     private void Update()
