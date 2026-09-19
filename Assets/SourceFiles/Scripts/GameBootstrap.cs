@@ -130,75 +130,27 @@ public sealed class GameBootstrap : MonoBehaviour
             playerObject.AddComponent<
                 PlayerController>();
 
-        CreatePlayerArmor(playerObject);
+        CreatePlayerAppearance(playerObject);
 
         player =
             playerObject.transform;
     }
 
-    private void CreatePlayerArmor(
+    private void CreatePlayerAppearance(
         GameObject playerObject)
     {
-        CreatePlayerPart(
-            "ArmorCore",
-            playerObject.transform,
-            new Vector3(0f, 0.15f, 0f),
-            new Vector3(0.9f, 0.95f, 0.7f),
-            new Color(0.12f, 0.16f, 0.22f));
+        PlayerAppearanceBuilder appearanceBuilder =
+            playerObject.AddComponent<
+                PlayerAppearanceBuilder>();
 
-        CreatePlayerPart(
-            "LeftShoulder",
-            playerObject.transform,
-            new Vector3(-0.58f, 0.45f, 0f),
-            new Vector3(0.28f, 0.45f, 0.5f),
-            new Color(0.55f, 0.1f, 0.2f));
-
-        CreatePlayerPart(
-            "RightShoulder",
-            playerObject.transform,
-            new Vector3(0.58f, 0.45f, 0f),
-            new Vector3(0.28f, 0.45f, 0.5f),
-            new Color(0.55f, 0.1f, 0.2f));
-
-        CreatePlayerPart(
-            "BackEmitter",
-            playerObject.transform,
-            new Vector3(0f, 0.15f, -0.55f),
-            new Vector3(0.45f, 0.75f, 0.18f),
-            new Color(0.06f, 0.75f, 1f));
-    }
-
-    private static void CreatePlayerPart(
-        string objectName,
-        Transform parent,
-        Vector3 localPosition,
-        Vector3 localScale,
-        Color color)
-    {
-        GameObject part =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube);
-
-        part.name = objectName;
-        part.transform.SetParent(
-            parent,
-            false);
-        part.transform.localPosition =
-            localPosition;
-        part.transform.localScale =
-            localScale;
-
-        Collider collider =
-            part.GetComponent<Collider>();
-
-        if (collider != null)
+        if (appearanceBuilder == null)
         {
-            Destroy(collider);
+            throw new System.InvalidOperationException(
+                "PlayerAppearanceBuilder could not be created.");
         }
 
-        ApplyMaterial(
-            part,
-            color);
+        appearanceBuilder.Build(
+            playerObject.transform);
     }
 
     private void CreateCamera()
