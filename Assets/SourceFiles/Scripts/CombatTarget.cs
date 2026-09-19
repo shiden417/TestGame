@@ -50,7 +50,6 @@ public sealed class CombatTarget : MonoBehaviour
         hitFlashTimer -= Time.deltaTime;
 
         float normalized = Mathf.Clamp01(hitFlashTimer / Mathf.Max(0.001f, hitFlashDuration));
-        Color flashColor = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.25f), normalized);
 
         for (int i = 0; i < materials.Length; i++)
         {
