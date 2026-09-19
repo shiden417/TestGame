@@ -77,8 +77,14 @@ Mission Start
 - Japanese-inspired structural motifs.
 - Energy rails.
 - Futuristic skyline shapes.
-- Stylized player armor.
-- Energy blade visual.
+- Refined modular player armor silhouette.
+- Layered energy sword presentation.
+- Procedural player movement poses and gait.
+- Directional dodge motion and speed response.
+- Dynamic third-person camera framing/FOV.
+- Role-specific enemy visual silhouettes.
+- Procedural enemy movement and attack preparation poses.
+- Refined skill energy-ring effects.
 - Combat telegraphs.
 - Skill effects.
 - Perfect-dodge slow motion.
