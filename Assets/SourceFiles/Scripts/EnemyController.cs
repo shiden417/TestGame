@@ -22,6 +22,7 @@ public sealed class EnemyController : MonoBehaviour
     private Renderer targetRenderer;
     private Material targetMaterial;
     private Color baseColor;
+    private GameObject attackTelegraph;
 
     private float maxHealth;
     private float currentHealth;
@@ -79,6 +80,7 @@ public sealed class EnemyController : MonoBehaviour
         ApplyTypeTuning();
 
         targetRenderer = GetComponentInChildren<Renderer>();
+
         if (targetRenderer != null)
         {
             targetMaterial = targetRenderer.material;
@@ -99,15 +101,20 @@ public sealed class EnemyController : MonoBehaviour
 
     private void Update()
     {
-        if (!IsAlive || player == null || battleDirector == null)
+        if (!IsAlive
+            || player == null
+            || battleDirector == null)
         {
             return;
         }
 
-        bool attackWasCommitted = attackWindupTimer > 0f;
+        bool attackWasCommitted =
+            attackWindupTimer > 0f;
+
         UpdateTimers();
 
-        if (attackWasCommitted && attackWindupTimer <= 0f)
+        if (attackWasCommitted
+            && attackWindupTimer <= 0f)
         {
             ExecuteAttack();
             return;
@@ -115,7 +122,9 @@ public sealed class EnemyController : MonoBehaviour
 
         if (knockbackTimer > 0f)
         {
-            transform.position += knockbackVelocity * Time.deltaTime;
+            transform.position +=
+                knockbackVelocity * Time.deltaTime;
+
             return;
         }
 
@@ -124,9 +133,13 @@ public sealed class EnemyController : MonoBehaviour
             return;
         }
 
-        Vector3 offset = player.position - transform.position;
+        Vector3 offset =
+            player.position - transform.position;
+
         offset.y = 0f;
-        float distance = offset.magnitude;
+
+        float distance =
+            offset.magnitude;
 
         if (distance > aggroRange)
         {
@@ -141,9 +154,10 @@ public sealed class EnemyController : MonoBehaviour
 
         if (distance > attackRange)
         {
-            float desiredDistance = Mathf.Max(
-                stopDistance,
-                attackRange * 0.7f);
+            float desiredDistance =
+                Mathf.Max(
+                    stopDistance,
+                    attackRange * 0.7f);
 
             Vector3 moveDirection =
                 distance > desiredDistance
@@ -151,7 +165,9 @@ public sealed class EnemyController : MonoBehaviour
                     : Vector3.zero;
 
             transform.position +=
-                moveDirection * moveSpeed * Time.deltaTime;
+                moveDirection
+                * moveSpeed
+                * Time.deltaTime;
 
             FaceDirection(moveDirection);
             return;
@@ -163,76 +179,89 @@ public sealed class EnemyController : MonoBehaviour
             && battleDirector.CanEnemyAttack(this))
         {
             attackWindupTimer = attackWindup;
+            CreateAttackTelegraph();
         }
     }
 
     private void UpdateTimers()
     {
-        attackTimer = Mathf.Max(
-            0f,
-            attackTimer - Time.deltaTime);
+        attackTimer =
+            Mathf.Max(
+                0f,
+                attackTimer - Time.deltaTime);
 
-        attackWindupTimer = Mathf.Max(
-            0f,
-            attackWindupTimer - Time.deltaTime);
+        attackWindupTimer =
+            Mathf.Max(
+                0f,
+                attackWindupTimer - Time.deltaTime);
 
-        hitStunTimer = Mathf.Max(
-            0f,
-            hitStunTimer - Time.deltaTime);
+        hitStunTimer =
+            Mathf.Max(
+                0f,
+                hitStunTimer - Time.deltaTime);
 
         if (knockbackTimer > 0f)
         {
-            knockbackTimer = Mathf.Max(
-                0f,
-                knockbackTimer - Time.deltaTime);
+            knockbackTimer =
+                Mathf.Max(
+                    0f,
+                    knockbackTimer - Time.deltaTime);
 
-            knockbackVelocity = Vector3.Lerp(
-                knockbackVelocity,
-                Vector3.zero,
-                12f * Time.deltaTime);
+            knockbackVelocity =
+                Vector3.Lerp(
+                    knockbackVelocity,
+                    Vector3.zero,
+                    12f * Time.deltaTime);
         }
 
         if (hitFlashTimer > 0f)
         {
-            hitFlashTimer = Mathf.Max(
-                0f,
-                hitFlashTimer - Time.deltaTime);
+            hitFlashTimer =
+                Mathf.Max(
+                    0f,
+                    hitFlashTimer - Time.deltaTime);
 
             if (targetMaterial != null)
             {
-                float normalized = hitFlashTimer / 0.08f;
+                float normalized =
+                    hitFlashTimer / 0.08f;
 
-                targetMaterial.color = Color.Lerp(
-                    baseColor,
-                    Color.white,
-                    normalized);
+                targetMaterial.color =
+                    Color.Lerp(
+                        baseColor,
+                        Color.white,
+                        normalized);
             }
         }
     }
 
     private void ExecuteAttack()
     {
+        RemoveAttackTelegraph();
         attackTimer = attackCooldown;
 
         if (playerHealth == null)
         {
-            playerHealth = player.GetComponent<PlayerHealth>();
+            playerHealth =
+                player.GetComponent<PlayerHealth>();
         }
 
-        if (playerHealth == null || !playerHealth.IsAlive)
+        if (playerHealth == null
+            || !playerHealth.IsAlive)
         {
             return;
         }
 
-        float distance = Vector3.Distance(
-            new Vector3(
-                transform.position.x,
-                0f,
-                transform.position.z),
-            new Vector3(
-                player.position.x,
-                0f,
-                player.position.z));
+        float distance =
+            Vector3.Distance(
+                new Vector3(
+                    transform.position.x,
+                    0f,
+                    transform.position.z),
+                new Vector3(
+                    player.position.x,
+                    0f,
+                    player.position.z));
 
         if (IsBoss)
         {
@@ -240,30 +269,41 @@ public sealed class EnemyController : MonoBehaviour
         }
         else if (distance <= attackRange * 1.25f)
         {
-            playerHealth.TakeDamage(attackDamage);
+            playerHealth.TakeDamage(
+                attackDamage);
         }
 
-        CreateAttackFlash();
+        AudioDirector.Instance?.PlayAttack();
     }
 
     private void PerformBossAttack(float distance)
     {
         if (distance <= attackRange * 1.35f)
         {
-            playerHealth.TakeDamage(attackDamage);
+            playerHealth.TakeDamage(
+                attackDamage);
         }
 
         GameObject shockwave =
-            GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            GameObject.CreatePrimitive(
+                PrimitiveType.Cylinder);
 
-        shockwave.name = "BossShockwave";
+        shockwave.name =
+            "BossShockwave";
+
         shockwave.transform.position =
-            transform.position + Vector3.up * 0.06f;
+            transform.position
+            + Vector3.up * 0.06f;
 
         shockwave.transform.localScale =
-            new Vector3(3.6f, 0.04f, 3.6f);
+            new Vector3(
+                3.6f,
+                0.04f,
+                3.6f);
 
-        Collider collider = shockwave.GetComponent<Collider>();
+        Collider collider =
+            shockwave.GetComponent<Collider>();
+
         if (collider != null)
         {
             Destroy(collider);
@@ -275,7 +315,8 @@ public sealed class EnemyController : MonoBehaviour
         if (renderer != null)
         {
             Shader shader =
-                Shader.Find("Universal Render Pipeline/Lit")
+                Shader.Find(
+                    "Universal Render Pipeline/Lit")
                 ?? Shader.Find("Standard");
 
             if (shader != null)
@@ -284,7 +325,10 @@ public sealed class EnemyController : MonoBehaviour
                     new Material(shader)
                     {
                         color =
-                            new Color(1f, 0.32f, 0.04f)
+                            new Color(
+                                1f,
+                                0.32f,
+                                0.04f)
                     };
             }
         }
@@ -307,12 +351,17 @@ public sealed class EnemyController : MonoBehaviour
                 0f,
                 currentHealth - damage);
 
-        hitStunTimer = hitStunDuration;
+        hitStunTimer =
+            hitStunDuration;
+
         hitFlashTimer = 0.08f;
+
+        RemoveAttackTelegraph();
 
         if (targetMaterial != null)
         {
-            targetMaterial.color = Color.white;
+            targetMaterial.color =
+                Color.white;
         }
 
         if (applyKnockback
@@ -327,7 +376,8 @@ public sealed class EnemyController : MonoBehaviour
             if (force > 0f)
             {
                 knockbackVelocity =
-                    hitDirection.normalized * force;
+                    hitDirection.normalized
+                    * force;
 
                 knockbackTimer = 0.12f;
             }
@@ -337,6 +387,94 @@ public sealed class EnemyController : MonoBehaviour
         {
             gameObject.SetActive(false);
         }
+
+        AudioDirector.Instance?.PlayHit();
+    }
+
+    private void CreateAttackTelegraph()
+    {
+        RemoveAttackTelegraph();
+
+        PrimitiveType primitive =
+            IsBoss
+                ? PrimitiveType.Cylinder
+                : PrimitiveType.Cube;
+
+        attackTelegraph =
+            GameObject.CreatePrimitive(
+                primitive);
+
+        attackTelegraph.name =
+            "EnemyAttackTelegraph";
+
+        if (IsBoss)
+        {
+            attackTelegraph.transform.position =
+                transform.position
+                + Vector3.up * 0.08f;
+
+            attackTelegraph.transform.localScale =
+                new Vector3(
+                    2.4f,
+                    0.05f,
+                    2.4f);
+        }
+        else
+        {
+            attackTelegraph.transform.position =
+                transform.position
+                + transform.forward * 1.1f
+                + Vector3.up;
+
+            attackTelegraph.transform.localScale =
+                new Vector3(
+                    0.45f,
+                    0.12f,
+                    0.7f);
+        }
+
+        Collider collider =
+            attackTelegraph.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
+
+        Renderer renderer =
+            attackTelegraph.GetComponent<Renderer>();
+
+        if (renderer != null)
+        {
+            Shader shader =
+                Shader.Find(
+                    "Universal Render Pipeline/Lit")
+                ?? Shader.Find("Standard");
+
+            if (shader != null)
+            {
+                renderer.material =
+                    new Material(shader)
+                    {
+                        color =
+                            new Color(
+                                1f,
+                                0.12f,
+                                0.12f)
+                    };
+            }
+        }
+    }
+
+    private void RemoveAttackTelegraph()
+    {
+        if (attackTelegraph == null)
+        {
+            return;
+        }
+
+        Destroy(attackTelegraph);
+        attackTelegraph = null;
     }
 
     private void ApplyTypeTuning()
@@ -408,56 +546,14 @@ public sealed class EnemyController : MonoBehaviour
                 14f * Time.deltaTime);
     }
 
-    private void CreateAttackFlash()
-    {
-        GameObject flash =
-            GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-        flash.name = "EnemyAttackTelegraph";
-        flash.transform.position =
-            transform.position
-            + transform.forward * 1.1f
-            + Vector3.up;
-
-        flash.transform.localScale =
-            new Vector3(0.45f, 0.12f, 0.7f);
-
-        Collider collider =
-            flash.GetComponent<Collider>();
-
-        if (collider != null)
-        {
-            Destroy(collider);
-        }
-
-        Renderer renderer =
-            flash.GetComponent<Renderer>();
-
-        if (renderer != null)
-        {
-            Shader shader =
-                Shader.Find("Universal Render Pipeline/Lit")
-                ?? Shader.Find("Standard");
-
-            if (shader != null)
-            {
-                renderer.material =
-                    new Material(shader)
-                    {
-                        color =
-                            new Color(1f, 0.12f, 0.12f)
-                    };
-            }
-        }
-
-        Destroy(flash, 0.1f);
-    }
-
     private void OnDestroy()
     {
+        RemoveAttackTelegraph();
+
         if (targetMaterial != null)
         {
-            targetMaterial.color = baseColor;
+            targetMaterial.color =
+                baseColor;
         }
     }
 }
