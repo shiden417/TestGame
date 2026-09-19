@@ -20,7 +20,6 @@ public sealed class PlayerCharacterModelImporter : AssetPostprocessor
         importer.animationType = ModelImporterAnimationType.Human;
         importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
         importer.importAnimation = true;
-        importer.importMaterials = true;
         importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
         importer.materialSearch = ModelImporterMaterialSearch.Local;
         importer.isReadable = false;
