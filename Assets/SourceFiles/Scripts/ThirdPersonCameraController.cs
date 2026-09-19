@@ -65,10 +65,11 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
         targetingSystem = targeting;
 
         Vector3 initialDirection = transform.position - (target.position + Vector3.up * lookHeight);
-        if (initialDirection.sqrMagnitude > 0.01f)
+        Vector3 flatDirection = new Vector3(initialDirection.x, 0f, initialDirection.z);
+
+        if (flatDirection.sqrMagnitude > 0.01f)
         {
-            Vector3 flat = new Vector3(initialDirection.x, 0f, initialDirection.z).normalized;
-            yaw = Mathf.Atan2(flat.x, flat.z) * Mathf.Rad2Deg;
+            yaw = Mathf.Atan2(flatDirection.x, flatDirection.z) * Mathf.Rad2Deg;
         }
     }
 
@@ -85,24 +86,26 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
 
     private void UpdateOrbit()
     {
-        Vector2 lookInput = input.Look.ReadValue<Vector2>();
+        Vector2 gamepadLook = input.Look.ReadValue<Vector2>();
+        Vector2 mouseLook = input.MouseLook.ReadValue<Vector2>();
+        Vector2 activeLook = gamepadLook.sqrMagnitude > 0.0001f
+            ? gamepadLook
+            : mouseLook;
 
-        if (lookInput.sqrMagnitude > 0.0001f)
+        if (activeLook.sqrMagnitude > 0.0001f)
         {
-            yaw += lookInput.x * lookSensitivity * Time.deltaTime;
-            pitch -= lookInput.y * lookSensitivity * 0.55f * Time.deltaTime;
+            float sensitivity = gamepadLook.sqrMagnitude > 0.0001f
+                ? lookSensitivity
+                : mouseSensitivity;
 
-            if (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.0001f)
-            {
-                yaw += 0f;
-                pitch += 0f;
-            }
+            yaw += activeLook.x * sensitivity * Time.deltaTime;
+            pitch -= activeLook.y * sensitivity * 0.55f * Time.deltaTime;
         }
 
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
         Transform lockTarget = targetingSystem.CurrentTarget;
-        if (lockTarget != null && lookInput.sqrMagnitude < 0.01f)
+        if (lockTarget != null && activeLook.sqrMagnitude < 0.01f)
         {
             Vector3 direction = lockTarget.position - target.position;
             direction.y = 0f;
