@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -23,6 +24,9 @@ public sealed class EnemyController : MonoBehaviour
     private Material targetMaterial;
     private Color baseColor;
     private GameObject attackTelegraph;
+    private Transform visualRoot;
+    private Vector3 visualBaseScale;
+    private float visualSeed;
 
     private float maxHealth;
     private float currentHealth;
@@ -79,12 +83,21 @@ public sealed class EnemyController : MonoBehaviour
 
         ApplyTypeTuning();
 
+        visualRoot = transform.Find("EnemyVisual");
+        if (visualRoot != null)
+        {
+            visualBaseScale = visualRoot.localScale;
+        }
+
+        visualSeed = Random.Range(0f, 1000f);
+
         targetRenderer = GetComponentInChildren<Renderer>();
 
         if (targetRenderer != null)
         {
             targetMaterial = targetRenderer.material;
             baseColor = targetMaterial.color;
+            ConfigureMaterial(targetMaterial);
         }
     }
 
@@ -112,6 +125,9 @@ public sealed class EnemyController : MonoBehaviour
             attackWindupTimer > 0f;
 
         UpdateTimers();
+
+        float distanceToPlayer = GetDistanceToPlayer();
+        AnimateVisual(distanceToPlayer);
 
         if (attackWasCommitted
             && attackWindupTimer <= 0f)
@@ -211,7 +227,7 @@ public sealed class EnemyController : MonoBehaviour
                 Vector3.Lerp(
                     knockbackVelocity,
                     Vector3.zero,
-                    12f * Time.deltaTime);
+                    14f * Time.deltaTime);
         }
 
         if (hitFlashTimer > 0f)
@@ -235,6 +251,118 @@ public sealed class EnemyController : MonoBehaviour
         }
     }
 
+    private void AnimateVisual(float distanceToPlayer)
+    {
+        if (visualRoot == null)
+        {
+            return;
+        }
+
+        float movementCycle =
+            Time.unscaledTime
+            * (4.5f + moveSpeed * 0.7f)
+            + visualSeed;
+
+        float moving01 =
+            Mathf.Clamp01(
+                (distanceToPlayer - stopDistance)
+                / 6f);
+
+        float bob =
+            Mathf.Abs(Mathf.Sin(movementCycle))
+            * 0.045f
+            * moving01;
+
+        float attackBlend =
+            attackWindupTimer > 0f
+                ? Mathf.Sin(
+                    Mathf.PI
+                    * Mathf.Clamp01(
+                        1f
+                        - attackWindupTimer
+                        / Mathf.Max(0.01f, attackWindup)))
+                : 0f;
+
+        float hitBlend =
+            hitStunTimer > 0f
+                ? Mathf.Clamp01(
+                    hitStunTimer
+                    / Mathf.Max(0.01f, hitStunDuration))
+                : 0f;
+
+        float squash =
+            1f
+            + attackBlend * 0.1f
+            - hitBlend * 0.08f;
+
+        visualRoot.localPosition =
+            new Vector3(
+                0f,
+                bob
+                + attackBlend * 0.025f,
+                0f);
+
+        visualRoot.localRotation =
+            Quaternion.Euler(
+                -attackBlend * 9f
+                + hitBlend * 5f,
+                Mathf.Sin(movementCycle * 0.5f)
+                * 3f
+                * moving01,
+                attackBlend * GetAttackLean() * 7f);
+
+        visualRoot.localScale =
+            new Vector3(
+                visualBaseScale.x
+                * (1f / Mathf.Sqrt(squash)),
+                visualBaseScale.y * squash,
+                visualBaseScale.z
+                * (1f / Mathf.Sqrt(squash)));
+
+        if (attackTelegraph != null)
+        {
+            float pulse =
+                1f
+                + Mathf.Sin(
+                    Time.unscaledTime * 18f
+                    + visualSeed)
+                * 0.08f;
+
+            attackTelegraph.transform.localScale =
+                attackTelegraph.transform.localScale
+                * 0.96f
+                + attackTelegraph.transform.localScale
+                * 0.04f
+                * pulse;
+        }
+    }
+
+    private float GetAttackLean()
+    {
+        return enemyType switch
+        {
+            EnemyType.Heavy => -1f,
+            EnemyType.Ranged => 1f,
+            EnemyType.Elite => -1f,
+            EnemyType.Boss => 1f,
+            _ => 1f
+        };
+    }
+
+    private float GetDistanceToPlayer()
+    {
+        if (player == null)
+        {
+            return 999f;
+        }
+
+        Vector3 self = transform.position;
+        Vector3 target = player.position;
+        self.y = 0f;
+        target.y = 0f;
+        return Vector3.Distance(self, target);
+    }
+
     private void ExecuteAttack()
     {
         RemoveAttackTelegraph();
@@ -253,15 +381,7 @@ public sealed class EnemyController : MonoBehaviour
         }
 
         float distance =
-            Vector3.Distance(
-                new Vector3(
-                    transform.position.x,
-                    0f,
-                    transform.position.z),
-                new Vector3(
-                    player.position.x,
-                    0f,
-                    player.position.z));
+            GetDistanceToPlayer();
 
         if (IsBoss)
         {
@@ -271,6 +391,11 @@ public sealed class EnemyController : MonoBehaviour
         {
             playerHealth.TakeDamage(
                 attackDamage);
+        }
+
+        if (enemyType == EnemyType.Ranged)
+        {
+            CreateRangedProjectileEffect();
         }
 
         AudioDirector.Instance?.PlayAttack();
@@ -297,9 +422,9 @@ public sealed class EnemyController : MonoBehaviour
 
         shockwave.transform.localScale =
             new Vector3(
-                3.6f,
-                0.04f,
-                3.6f);
+                4.8f,
+                0.045f,
+                4.8f);
 
         Collider collider =
             shockwave.GetComponent<Collider>();
@@ -321,19 +446,155 @@ public sealed class EnemyController : MonoBehaviour
 
             if (shader != null)
             {
-                renderer.material =
+                Material material =
                     new Material(shader)
                     {
                         color =
                             new Color(
                                 1f,
-                                0.32f,
-                                0.04f)
+                                0.28f,
+                                0.035f)
                     };
+
+                ConfigureMaterial(material);
+                renderer.material = material;
             }
         }
 
-        Destroy(shockwave, 0.18f);
+        StartCoroutine(
+            ExpandShockwave(
+                shockwave));
+    }
+
+    private IEnumerator ExpandShockwave(GameObject shockwave)
+    {
+        if (shockwave == null)
+        {
+            yield break;
+        }
+
+        Vector3 start =
+            shockwave.transform.localScale;
+
+        const float duration = 0.28f;
+        float elapsed = 0f;
+
+        while (elapsed < duration && shockwave != null)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float eased = t * t * (3f - 2f * t);
+
+            shockwave.transform.localScale =
+                Vector3.Lerp(
+                    start,
+                    start * 2.2f,
+                    eased);
+
+            yield return null;
+        }
+
+        if (shockwave != null)
+        {
+            Destroy(shockwave);
+        }
+    }
+
+    private void CreateRangedProjectileEffect()
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        GameObject projectile =
+            GameObject.CreatePrimitive(
+                PrimitiveType.Sphere);
+
+        if (projectile == null)
+        {
+            return;
+        }
+
+        projectile.name = "RangedEnergyBolt";
+        projectile.transform.position =
+            transform.position
+            + Vector3.up * 0.8f
+            + transform.forward * 0.8f;
+        projectile.transform.localScale =
+            new Vector3(0.16f, 0.16f, 0.16f);
+
+        Collider collider =
+            projectile.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
+
+        Renderer renderer =
+            projectile.GetComponent<Renderer>();
+
+        if (renderer != null)
+        {
+            Shader shader =
+                Shader.Find(
+                    "Universal Render Pipeline/Lit")
+                ?? Shader.Find("Standard");
+
+            if (shader != null)
+            {
+                Material material =
+                    new Material(shader)
+                    {
+                        color =
+                            new Color(
+                                1f,
+                                0.22f,
+                                0.55f)
+                    };
+
+                ConfigureMaterial(material);
+                renderer.material = material;
+            }
+        }
+
+        StartCoroutine(
+            MoveProjectile(
+                projectile));
+    }
+
+    private IEnumerator MoveProjectile(GameObject projectile)
+    {
+        Vector3 start =
+            projectile.transform.position;
+
+        Vector3 end =
+            player != null
+                ? player.position + Vector3.up * 0.9f
+                : start + transform.forward * 8f;
+
+        float elapsed = 0f;
+        const float duration = 0.16f;
+
+        while (elapsed < duration && projectile != null)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            projectile.transform.position =
+                Vector3.Lerp(
+                    start,
+                    end,
+                    t);
+
+            yield return null;
+        }
+
+        if (projectile != null)
+        {
+            Destroy(projectile);
+        }
     }
 
     public void TakeDamage(
@@ -415,22 +676,22 @@ public sealed class EnemyController : MonoBehaviour
 
             attackTelegraph.transform.localScale =
                 new Vector3(
-                    2.4f,
+                    2.8f,
                     0.05f,
-                    2.4f);
+                    2.8f);
         }
         else
         {
             attackTelegraph.transform.position =
                 transform.position
-                + transform.forward * 1.1f
-                + Vector3.up;
+                + transform.forward * 1.15f
+                + Vector3.up * 0.75f;
 
             attackTelegraph.transform.localScale =
                 new Vector3(
-                    0.45f,
-                    0.12f,
-                    0.7f);
+                    enemyType == EnemyType.Ranged ? 0.35f : 0.55f,
+                    0.08f,
+                    enemyType == EnemyType.Ranged ? 0.95f : 0.82f);
         }
 
         Collider collider =
@@ -453,15 +714,18 @@ public sealed class EnemyController : MonoBehaviour
 
             if (shader != null)
             {
-                renderer.material =
+                Material material =
                     new Material(shader)
                     {
                         color =
                             new Color(
                                 1f,
-                                0.12f,
+                                0.08f,
                                 0.12f)
                     };
+
+                ConfigureMaterial(material);
+                renderer.material = material;
             }
         }
     }
@@ -485,6 +749,7 @@ public sealed class EnemyController : MonoBehaviour
                 attackRange = 2.1f;
                 stopDistance = 1.6f;
                 knockbackResistance = 0f;
+                attackWindup = 0.38f;
                 break;
 
             case EnemyType.Heavy:
@@ -493,6 +758,7 @@ public sealed class EnemyController : MonoBehaviour
                 stopDistance = 1.9f;
                 attackDamage *= 1.7f;
                 knockbackResistance = 6f;
+                attackWindup = 0.62f;
                 break;
 
             case EnemyType.Ranged:
@@ -501,6 +767,7 @@ public sealed class EnemyController : MonoBehaviour
                 stopDistance = 5.5f;
                 attackDamage *= 0.75f;
                 knockbackResistance = 1f;
+                attackWindup = 0.5f;
                 break;
 
             case EnemyType.Elite:
@@ -511,6 +778,7 @@ public sealed class EnemyController : MonoBehaviour
                 attackDamage *= 1.5f;
                 attackCooldown *= 0.85f;
                 knockbackResistance = 7f;
+                attackWindup = 0.52f;
                 break;
 
             case EnemyType.Boss:
@@ -521,6 +789,7 @@ public sealed class EnemyController : MonoBehaviour
                 attackDamage *= 2.2f;
                 attackCooldown *= 0.75f;
                 knockbackResistance = 999f;
+                attackWindup = 0.78f;
                 break;
         }
     }
@@ -543,7 +812,34 @@ public sealed class EnemyController : MonoBehaviour
             Quaternion.Slerp(
                 transform.rotation,
                 desiredRotation,
-                14f * Time.deltaTime);
+                17f * Time.deltaTime);
+    }
+
+    private static void ConfigureMaterial(Material material)
+    {
+        if (material == null)
+        {
+            return;
+        }
+
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0.35f);
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", 0.82f);
+        }
+
+        if (material.HasProperty("_EmissionColor")
+            && material.color.maxColorComponent > 0.6f)
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor(
+                "_EmissionColor",
+                material.color * 1.5f);
+        }
     }
 
     private void OnDestroy()
