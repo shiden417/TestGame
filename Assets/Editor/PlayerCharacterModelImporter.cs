@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public sealed class PlayerCharacterModelImporter : AssetPostprocessor
@@ -42,15 +44,16 @@ public sealed class PlayerCharacterModelImporter : AssetPostprocessor
         {
             animator.runtimeAnimatorController = controller;
         }
+
         animator.applyRootMotion = false;
         animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
     }
 
     private static RuntimeAnimatorController BuildController()
     {
-        string controllerPath = "Assets/Resources/PlayerCharacter/PlayerCharacter.controller";
-        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
+        const string controllerPath = "Assets/Resources/PlayerCharacter/PlayerCharacter.controller";
 
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
         if (controller == null)
         {
             controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
@@ -63,7 +66,9 @@ public sealed class PlayerCharacterModelImporter : AssetPostprocessor
 
         foreach (AnimationClip clip in clips)
         {
-            if (clip == null || string.IsNullOrWhiteSpace(clip.name) || clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
+            if (clip == null ||
+                string.IsNullOrWhiteSpace(clip.name) ||
+                clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
