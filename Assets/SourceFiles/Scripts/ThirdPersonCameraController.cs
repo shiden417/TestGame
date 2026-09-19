@@ -14,7 +14,15 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
     [SerializeField] private float rotationSmoothSpeed = 22f;
     [SerializeField] private float lockOnRotationSpeed = 8f;
     [SerializeField] private float collisionRadius = 0.2f;
-    [SerializeField] private float minimumDistance = 1.35f;\n    [SerializeField] private float shoulderOffset = 0.38f;\n    [SerializeField] private float baseFieldOfView = 62f;\n    [SerializeField] private float movementFovGain = 3.5f;\n    [SerializeField] private float dodgeFovGain = 6f;\n\n    private PlayerController playerController;\n    private DodgeController dodgeController;\n    private Camera targetCamera;
+    [SerializeField] private float minimumDistance = 1.35f;
+    [SerializeField] private float shoulderOffset = 0.38f;
+    [SerializeField] private float baseFieldOfView = 62f;
+    [SerializeField] private float movementFovGain = 3.5f;
+    [SerializeField] private float dodgeFovGain = 6f;
+
+    private PlayerController playerController;
+    private DodgeController dodgeController;
+    private Camera targetCamera;
 
     private Transform target;
     private TargetingSystem targetingSystem;
