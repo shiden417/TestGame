@@ -17,7 +17,7 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
     {
         GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "FutureRuinedGround";
-        ground.transform.localScale = new Vector3(3.2f, 1f, 3.2f);
+        ground.transform.localScale = new Vector3(7f, 1f, 7f);
 
         ApplyMaterial(
             ground,
