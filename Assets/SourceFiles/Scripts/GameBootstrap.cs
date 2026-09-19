@@ -190,11 +190,11 @@ public sealed class GameBootstrap : MonoBehaviour
             "MainCamera";
 
         camera.enabled = true;
-        camera.fieldOfView = 64f;
+        camera.fieldOfView = 58f;
         camera.nearClipPlane = 0.05f;
         camera.farClipPlane = 240f;
         camera.clearFlags = CameraClearFlags.SolidColor;
-        camera.backgroundColor = new Color(0.008f, 0.012f, 0.024f);
+        camera.backgroundColor = new Color(0.004f, 0.007f, 0.015f);
 
         UniversalAdditionalCameraData cameraData =
             cameraObject.GetComponent<UniversalAdditionalCameraData>();
