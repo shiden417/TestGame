@@ -9,6 +9,8 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
         CreateBoundary();
         CreateFutureShrines();
         CreateEnergyRails();
+        CreateArenaCore();
+        CreateRuinedDetails();
         CreateSkyObjects();
         ConfigureLighting();
     }
@@ -103,6 +105,87 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
                 new Vector3(0f, 0.045f, position),
                 new Vector3(54f, 0.08f, 0.06f),
                 new Color(0.55f, 0.12f, 1f));
+        }
+    }
+
+    private void CreateArenaCore()
+    {
+        GameObject arena =
+            GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+
+        arena.name = "ArenaCore";
+        arena.transform.position = new Vector3(0f, 0.015f, 0f);
+        arena.transform.localScale = new Vector3(8.5f, 0.025f, 8.5f);
+
+        ApplyMaterial(
+            arena,
+            new Color(0.035f, 0.055f, 0.09f));
+
+        CreateGlow(
+            new Vector3(0f, 0.055f, 0f),
+            new Vector3(0.035f, 0.08f, 17f),
+            new Color(0.05f, 0.75f, 1f));
+
+        CreateGlow(
+            new Vector3(0f, 0.058f, 0f),
+            new Vector3(17f, 0.08f, 0.035f),
+            new Color(0.45f, 0.12f, 1f));
+    }
+
+    private void CreateRuinedDetails()
+    {
+        Vector3[] positions =
+        {
+            new(-11f, 0.35f, 4f),
+            new(10f, 0.25f, 7f),
+            new(-8f, 0.2f, -8f),
+            new(9f, 0.3f, -10f),
+            new(-20f, 0.25f, -3f),
+            new(20f, 0.25f, 2f)
+        };
+
+        for (int i = 0; i < positions.Length; i++)
+        {
+            GameObject ruin =
+                GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            ruin.name = "RuinedStructureDetail";
+            ruin.transform.position = positions[i];
+            ruin.transform.localScale = new Vector3(
+                1.5f + (i % 3) * 0.7f,
+                0.35f + (i % 2) * 0.35f,
+                1.2f + (i % 2) * 0.8f);
+            ruin.transform.rotation =
+                Quaternion.Euler(
+                    0f,
+                    i * 27f,
+                    (i % 2 == 0 ? 8f : -6f));
+
+            ApplyMaterial(
+                ruin,
+                new Color(0.04f, 0.06f, 0.095f));
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            float angle = (i * 60f + 22f) * Mathf.Deg2Rad;
+            Vector3 position = new Vector3(
+                Mathf.Cos(angle) * 13.5f,
+                1.2f + (i % 2) * 0.5f,
+                Mathf.Sin(angle) * 13.5f);
+
+            CreateBlock(
+                "EnergyMonolith",
+                position,
+                new Vector3(0.28f, 2.4f, 0.28f),
+                new Color(0.05f, 0.13f, 0.19f));
+
+            CreateGlow(
+                position + Vector3.up * 0.05f,
+                new Vector3(0.09f, 2f, 0.09f),
+                i % 2 == 0
+                    ? new Color(0.05f, 0.75f, 1f)
+                    : new Color(0.55f, 0.12f, 1f));
         }
     }
 
@@ -205,10 +288,30 @@ public sealed class WorldPresentationBuilder : MonoBehaviour
                 "No compatible Unity material shader was found.");
         }
 
-        renderer.material =
-            new Material(shader)
+        Material material = new Material(shader)
+        {
+            color = color
+        };
+
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0.65f);
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", 0.72f);
+        }
+
+        if (color.g > 0.5f || color.b > 0.5f)
+        {
+            if (material.HasProperty("_EmissionColor"))
             {
-                color = color
-            };
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", color * 1.25f);
+            }
+        }
+
+        renderer.material = material;
     }
 }
