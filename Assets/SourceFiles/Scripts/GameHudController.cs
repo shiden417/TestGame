@@ -180,3 +180,5 @@ public sealed class GameHudController : MonoBehaviour
 
         return text;
     }
+
+}
