@@ -4,10 +4,10 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerCombatController : MonoBehaviour
 {
-    [SerializeField] private float attackDuration = 0.32f;
-    [SerializeField] private float comboWindow = 0.48f;
-    [SerializeField] private float hitStartNormalizedTime = 0.34f;
-    [SerializeField] private float hitEndNormalizedTime = 0.52f;
+    [SerializeField] private float attackDuration = 0.29f;
+    [SerializeField] private float comboWindow = 0.52f;
+    [SerializeField] private float hitStartNormalizedTime = 0.3f;
+    [SerializeField] private float hitEndNormalizedTime = 0.58f;
     [SerializeField] private float attackRange = 2.2f;
     [SerializeField] private float attackRadius = 0.9f;
     [SerializeField] private float baseDamage = 34f;
@@ -23,12 +23,17 @@ public sealed class PlayerCombatController : MonoBehaviour
     private Material weaponMaterial;
     private float attackTimer;
     private float comboTimer;
+    private GameObject bladeGlow;
+    private Material bladeGlowMaterial;
     private int comboStep;
     private bool queuedAttack;
     private bool hasHitThisAttack;
 
     public bool IsAttacking { get; private set; }
     public int ComboStep => comboStep;
+    public float AttackNormalizedTime => IsAttacking
+        ? Mathf.Clamp01(attackTimer / Mathf.Max(0.001f, attackDuration))
+        : 0f;
 
     public void Initialize(
         GameInput gameInput,
@@ -286,8 +291,7 @@ public sealed class PlayerCombatController : MonoBehaviour
 
     private void CreateWeaponVisual()
     {
-        weaponVisual =
-            new GameObject("EnergyBladeWeapon");
+        weaponVisual = new GameObject("EnergyBladeWeapon");
 
         if (weaponVisual == null)
         {
@@ -295,95 +299,12 @@ public sealed class PlayerCombatController : MonoBehaviour
                 "Failed to create the energy blade weapon root.");
         }
 
-        weaponVisual.transform.SetParent(
-            transform,
-            false);
-
-        weaponVisual.transform.localPosition =
-            new Vector3(
-                0.58f,
-                -0.02f,
-                0.28f);
-
-        weaponVisual.transform.localRotation =
-            Quaternion.Euler(
-                0f,
-                -22f,
-                15f);
-
-        GameObject blade =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube);
-
-        if (blade == null)
-        {
-            throw new System.InvalidOperationException(
-                "Failed to create the energy blade.");
-        }
-
-        blade.name = "EnergyBlade";
-        blade.transform.SetParent(
-            weaponVisual.transform,
-            false);
-
-        blade.transform.localPosition =
-            new Vector3(
-                0f,
-                0f,
-                0.82f);
-
-        blade.transform.localScale =
-            new Vector3(
-                0.1f,
-                0.08f,
-                1.55f);
-
-        Collider bladeCollider =
-            blade.GetComponent<Collider>();
-
-        if (bladeCollider != null)
-        {
-            Destroy(bladeCollider);
-        }
-
-        GameObject guard =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube);
-
-        if (guard == null)
-        {
-            throw new System.InvalidOperationException(
-                "Failed to create the energy blade guard.");
-        }
-
-        guard.name = "EnergyBladeGuard";
-        guard.transform.SetParent(
-            weaponVisual.transform,
-            false);
-
-        guard.transform.localPosition =
-            new Vector3(
-                0f,
-                0f,
-                0.08f);
-
-        guard.transform.localScale =
-            new Vector3(
-                0.34f,
-                0.06f,
-                0.09f);
-
-        Collider guardCollider =
-            guard.GetComponent<Collider>();
-
-        if (guardCollider != null)
-        {
-            Destroy(guardCollider);
-        }
+        weaponVisual.transform.SetParent(transform, false);
+        weaponVisual.transform.localPosition = new Vector3(0.64f, -0.04f, 0.24f);
+        weaponVisual.transform.localRotation = Quaternion.Euler(0f, -24f, 12f);
 
         Shader shader =
-            Shader.Find(
-                "Universal Render Pipeline/Lit")
+            Shader.Find("Universal Render Pipeline/Lit")
             ?? Shader.Find("Standard");
 
         if (shader == null)
@@ -392,44 +313,104 @@ public sealed class PlayerCombatController : MonoBehaviour
                 "No compatible Unity material shader was found.");
         }
 
-        weaponMaterial =
-            new Material(shader)
-            {
-                color =
-                    new Color(
-                        0.18f,
-                        0.92f,
-                        1f)
-            };
+        GameObject handle = CreateWeaponPart(
+            "WeaponHandle",
+            weaponVisual.transform,
+            new Vector3(0f, 0f, -0.13f),
+            new Vector3(0.09f, 0.09f, 0.3f));
 
-        Renderer bladeRenderer =
-            blade.GetComponent<Renderer>();
+        ApplyWeaponMaterial(handle, new Color(0.08f, 0.09f, 0.12f));
 
-        if (bladeRenderer == null)
+        GameObject bladeOuter = CreateWeaponPart(
+            "EnergyBladeGlow",
+            weaponVisual.transform,
+            new Vector3(0f, 0f, 0.76f),
+            new Vector3(0.16f, 0.13f, 1.62f));
+
+        bladeGlowMaterial = new Material(shader)
         {
-            throw new System.InvalidOperationException(
-                "Energy blade renderer was not created.");
-        }
+            color = new Color(0.02f, 0.34f, 0.58f)
+        };
+        ConfigureMaterial(bladeGlowMaterial, true);
+        bladeOuter.GetComponent<Renderer>().material = bladeGlowMaterial;
+        bladeGlow = bladeOuter;
 
-        bladeRenderer.material =
-            weaponMaterial;
+        GameObject blade = CreateWeaponPart(
+            "EnergyBlade",
+            weaponVisual.transform,
+            new Vector3(0f, 0f, 0.78f),
+            new Vector3(0.085f, 0.075f, 1.55f));
 
-        ApplyWeaponMaterial(
-            guard,
-            new Color(
-                0.72f,
-                0.55f,
-                0.18f));
+        weaponMaterial = new Material(shader)
+        {
+            color = new Color(0.18f, 0.92f, 1f)
+        };
+        ConfigureMaterial(weaponMaterial, true);
+        blade.GetComponent<Renderer>().material = weaponMaterial;
+
+        GameObject guard = CreateWeaponPart(
+            "EnergyBladeGuard",
+            weaponVisual.transform,
+            new Vector3(0f, 0f, 0.06f),
+            new Vector3(0.34f, 0.065f, 0.09f));
+
+        ApplyWeaponMaterial(guard, new Color(0.72f, 0.55f, 0.18f));
 
         weaponVisual.SetActive(false);
+    }
+
+    private static GameObject CreateWeaponPart(
+        string objectName,
+        Transform parent,
+        Vector3 localPosition,
+        Vector3 localScale)
+    {
+        GameObject part = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+        if (part == null)
+        {
+            throw new System.InvalidOperationException(
+                $"Failed to create weapon part: {objectName}");
+        }
+
+        part.name = objectName;
+        part.transform.SetParent(parent, false);
+        part.transform.localPosition = localPosition;
+        part.transform.localScale = localScale;
+
+        Collider collider = part.GetComponent<Collider>();
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
+
+        return part;
+    }
+
+    private static void ConfigureMaterial(Material material, bool emission)
+    {
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0.35f);
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", 0.88f);
+        }
+
+        if (emission && material.HasProperty("_EmissionColor"))
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", material.color * 2f);
+        }
     }
 
     private static void ApplyWeaponMaterial(
         GameObject target,
         Color color)
     {
-        Renderer renderer =
-            target.GetComponent<Renderer>();
+        Renderer renderer = target.GetComponent<Renderer>();
 
         if (renderer == null)
         {
@@ -437,8 +418,7 @@ public sealed class PlayerCombatController : MonoBehaviour
         }
 
         Shader shader =
-            Shader.Find(
-                "Universal Render Pipeline/Lit")
+            Shader.Find("Universal Render Pipeline/Lit")
             ?? Shader.Find("Standard");
 
         if (shader == null)
@@ -446,11 +426,13 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        renderer.material =
-            new Material(shader)
-            {
-                color = color
-            };
+        Material material = new Material(shader)
+        {
+            color = color
+        };
+
+        ConfigureMaterial(material, false);
+        renderer.material = material;
     }
 
     private void AnimateWeapon(float normalizedTime)
@@ -460,28 +442,80 @@ public sealed class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        float angle =
-            Mathf.Lerp(
-                -72f,
-                92f,
-                normalizedTime);
+        float eased =
+            normalizedTime * normalizedTime
+            * (3f - 2f * normalizedTime);
 
-        float lift =
-            Mathf.Sin(
-                normalizedTime * Mathf.PI)
-            * 0.08f;
+        float startAngle;
+        float endAngle;
+        float startPitch;
+        float endPitch;
+        float startRoll;
+        float endRoll;
+
+        switch (comboStep)
+        {
+            case 1:
+                startAngle = -102f;
+                endAngle = 52f;
+                startPitch = -18f;
+                endPitch = 8f;
+                startRoll = 24f;
+                endRoll = -10f;
+                break;
+
+            case 2:
+                startAngle = 72f;
+                endAngle = -96f;
+                startPitch = 10f;
+                endPitch = -14f;
+                startRoll = -16f;
+                endRoll = 16f;
+                break;
+
+            default:
+                startAngle = -118f;
+                endAngle = 138f;
+                startPitch = -8f;
+                endPitch = 18f;
+                startRoll = 14f;
+                endRoll = -28f;
+                break;
+        }
+
+        float angle = Mathf.Lerp(startAngle, endAngle, eased);
+        float pitch = Mathf.Lerp(startPitch, endPitch, eased);
+        float roll = Mathf.Lerp(startRoll, endRoll, eased);
+
+        float lunge = Mathf.Sin(normalizedTime * Mathf.PI) * 0.16f;
+        float lift = Mathf.Sin(normalizedTime * Mathf.PI) * 0.06f;
+        float side = GetAttackSide() * Mathf.Sin(normalizedTime * Mathf.PI) * 0.055f;
 
         weaponVisual.transform.localPosition =
             new Vector3(
-                0.58f,
-                -0.02f + lift,
-                0.28f);
+                0.64f + side,
+                -0.04f + lift,
+                0.24f + lunge);
 
         weaponVisual.transform.localRotation =
-            Quaternion.Euler(
-                -8f,
-                angle,
-                12f);
+            Quaternion.Euler(pitch, angle, roll);
+
+        if (bladeGlow != null)
+        {
+            float glowScale =
+                1f + Mathf.Sin(normalizedTime * Mathf.PI) * 0.1f;
+
+            bladeGlow.transform.localScale =
+                new Vector3(
+                    0.16f * glowScale,
+                    0.13f * glowScale,
+                    1.62f * glowScale);
+        }
+    }
+
+    private int GetAttackSide()
+    {
+        return comboStep == 2 ? -1 : 1;
     }
 
     private void OnDestroy()
@@ -494,6 +528,11 @@ public sealed class PlayerCombatController : MonoBehaviour
         if (weaponMaterial != null)
         {
             Destroy(weaponMaterial);
+        }
+
+        if (bladeGlowMaterial != null)
+        {
+            Destroy(bladeGlowMaterial);
         }
     }
 }
