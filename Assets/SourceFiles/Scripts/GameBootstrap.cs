@@ -36,15 +36,20 @@ public sealed class GameBootstrap : MonoBehaviour
 
     private void CreateCoreSystems()
     {
-        gameFlowController = CreateComponent<GameFlowController>("GameFlow");
-        battleDirector = CreateComponent<BattleDirector>("BattleDirector");
-        stageDirector = CreateComponent<StageDirector>("StageDirector");
+        CreateComponent<AudioDirector>("AudioDirector");
+        gameFlowController =
+            CreateComponent<GameFlowController>("GameFlow");
+        battleDirector =
+            CreateComponent<BattleDirector>("BattleDirector");
+        stageDirector =
+            CreateComponent<StageDirector>("StageDirector");
     }
 
     private void CreateWorld()
     {
         WorldPresentationBuilder builder =
-            CreateComponent<WorldPresentationBuilder>("WorldPresentation");
+            CreateComponent<WorldPresentationBuilder>(
+                "WorldPresentation");
 
         builder.Build();
     }
@@ -52,7 +57,8 @@ public sealed class GameBootstrap : MonoBehaviour
     private void CreatePlayer()
     {
         GameObject playerObject =
-            GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            GameObject.CreatePrimitive(
+                PrimitiveType.Capsule);
 
         playerObject.name = "Player";
         playerObject.transform.position =
@@ -62,7 +68,10 @@ public sealed class GameBootstrap : MonoBehaviour
 
         ApplyMaterial(
             playerObject,
-            new Color(0.08f, 0.34f, 0.55f));
+            new Color(
+                0.08f,
+                0.34f,
+                0.55f));
 
         Collider primitiveCollider =
             playerObject.GetComponent<Collider>();
@@ -81,16 +90,27 @@ public sealed class GameBootstrap : MonoBehaviour
         characterController.stepOffset = 0.3f;
         characterController.slopeLimit = 50f;
 
-        gameInput = playerObject.AddComponent<GameInput>();
-        targetingSystem = playerObject.AddComponent<TargetingSystem>();
-        dodgeController = playerObject.AddComponent<DodgeController>();
-        playerHealth = playerObject.AddComponent<PlayerHealth>();
+        gameInput =
+            playerObject.AddComponent<GameInput>();
+
+        targetingSystem =
+            playerObject.AddComponent<TargetingSystem>();
+
+        dodgeController =
+            playerObject.AddComponent<DodgeController>();
+
+        playerHealth =
+            playerObject.AddComponent<PlayerHealth>();
+
         perfectDodgeSystem =
             playerObject.AddComponent<PerfectDodgeSystem>();
+
         combatController =
             playerObject.AddComponent<PlayerCombatController>();
+
         skillController =
             playerObject.AddComponent<PlayerSkillController>();
+
         playerController =
             playerObject.AddComponent<PlayerController>();
 
@@ -99,35 +119,72 @@ public sealed class GameBootstrap : MonoBehaviour
         player = playerObject.transform;
     }
 
-    private void CreatePlayerArmor(GameObject playerObject)
+    private void CreatePlayerArmor(
+        GameObject playerObject)
     {
         CreatePlayerPart(
             "ArmorCore",
             playerObject.transform,
-            new Vector3(0f, 0.15f, 0f),
-            new Vector3(0.9f, 0.95f, 0.7f),
-            new Color(0.12f, 0.16f, 0.22f));
+            new Vector3(
+                0f,
+                0.15f,
+                0f),
+            new Vector3(
+                0.9f,
+                0.95f,
+                0.7f),
+            new Color(
+                0.12f,
+                0.16f,
+                0.22f));
 
         CreatePlayerPart(
             "LeftShoulder",
             playerObject.transform,
-            new Vector3(-0.58f, 0.45f, 0f),
-            new Vector3(0.28f, 0.45f, 0.5f),
-            new Color(0.55f, 0.1f, 0.2f));
+            new Vector3(
+                -0.58f,
+                0.45f,
+                0f),
+            new Vector3(
+                0.28f,
+                0.45f,
+                0.5f),
+            new Color(
+                0.55f,
+                0.1f,
+                0.2f));
 
         CreatePlayerPart(
             "RightShoulder",
             playerObject.transform,
-            new Vector3(0.58f, 0.45f, 0f),
-            new Vector3(0.28f, 0.45f, 0.5f),
-            new Color(0.55f, 0.1f, 0.2f));
+            new Vector3(
+                0.58f,
+                0.45f,
+                0f),
+            new Vector3(
+                0.28f,
+                0.45f,
+                0.5f),
+            new Color(
+                0.55f,
+                0.1f,
+                0.2f));
 
         CreatePlayerPart(
             "BackEmitter",
             playerObject.transform,
-            new Vector3(0f, 0.15f, -0.55f),
-            new Vector3(0.45f, 0.75f, 0.18f),
-            new Color(0.06f, 0.75f, 1f));
+            new Vector3(
+                0f,
+                0.15f,
+                -0.55f),
+            new Vector3(
+                0.45f,
+                0.75f,
+                0.18f),
+            new Color(
+                0.06f,
+                0.75f,
+                1f));
     }
 
     private static void CreatePlayerPart(
@@ -138,43 +195,63 @@ public sealed class GameBootstrap : MonoBehaviour
         Color color)
     {
         GameObject part =
-            GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
 
         part.name = objectName;
-        part.transform.SetParent(parent, false);
-        part.transform.localPosition = localPosition;
-        part.transform.localScale = localScale;
+        part.transform.SetParent(
+            parent,
+            false);
+        part.transform.localPosition =
+            localPosition;
+        part.transform.localScale =
+            localScale;
 
-        Collider collider = part.GetComponent<Collider>();
+        Collider collider =
+            part.GetComponent<Collider>();
+
         if (collider != null)
         {
             Destroy(collider);
         }
 
-        ApplyMaterial(part, color);
+        ApplyMaterial(
+            part,
+            color);
     }
 
     private void CreateCamera()
     {
-        GameObject cameraObject = new GameObject("Main Camera");
+        GameObject cameraObject =
+            new GameObject(
+                "Main Camera");
 
-        Camera camera = cameraObject.AddComponent<Camera>();
-        cameraObject.tag = "MainCamera";
+        Camera camera =
+            cameraObject.AddComponent<Camera>();
+
+        cameraObject.tag =
+            "MainCamera";
+
         camera.fieldOfView = 64f;
         camera.nearClipPlane = 0.05f;
         camera.farClipPlane = 240f;
 
         cameraController =
-            cameraObject.AddComponent<ThirdPersonCameraController>();
+            cameraObject.AddComponent<
+                ThirdPersonCameraController>();
 
         cameraObject.transform.position =
-            new Vector3(0f, 5.8f, -16f);
+            new Vector3(
+                0f,
+                5.8f,
+                -16f);
     }
 
     private void WirePlayerSystems()
     {
         CharacterController characterController =
-            player.GetComponent<CharacterController>();
+            player.GetComponent<
+                CharacterController>();
 
         if (characterController == null)
         {
@@ -220,7 +297,8 @@ public sealed class GameBootstrap : MonoBehaviour
             gameInput,
             targetingSystem,
             dodgeController,
-            perfectDodgeSystem);
+            perfectDodgeSystem,
+            skillController);
 
         skillController.Initialize(
             gameInput,
@@ -245,8 +323,6 @@ public sealed class GameBootstrap : MonoBehaviour
 
     private void CreatePresentation()
     {
-        // Presentation is built by WorldPresentationBuilder.
-        // This method intentionally keeps the bootstrap responsibility explicit.
     }
 
     private void CreateHud()
@@ -255,7 +331,8 @@ public sealed class GameBootstrap : MonoBehaviour
             new GameObject("GameHUD");
 
         hudController =
-            hudObject.AddComponent<GameHudController>();
+            hudObject.AddComponent<
+                GameHudController>();
 
         hudController.Initialize(
             gameFlowController,
@@ -266,13 +343,15 @@ public sealed class GameBootstrap : MonoBehaviour
             perfectDodgeSystem);
     }
 
-    private static T CreateComponent<T>(string objectName)
+    private static T CreateComponent<T>(
+        string objectName)
         where T : Component
     {
         GameObject gameObject =
             new GameObject(objectName);
 
-        T component = gameObject.AddComponent<T>();
+        T component =
+            gameObject.AddComponent<T>();
 
         if (component == null)
         {
@@ -296,7 +375,8 @@ public sealed class GameBootstrap : MonoBehaviour
         }
 
         Shader shader =
-            Shader.Find("Universal Render Pipeline/Lit")
+            Shader.Find(
+                "Universal Render Pipeline/Lit")
             ?? Shader.Find("Standard");
 
         if (shader == null)
