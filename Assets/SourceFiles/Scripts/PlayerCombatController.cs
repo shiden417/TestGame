@@ -4,12 +4,12 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerCombatController : MonoBehaviour
 {
-    [SerializeField] private float attackDuration = 0.29f;
-    [SerializeField] private float comboWindow = 0.52f;
+    [SerializeField] private float attackDuration = 0.24f;
+    [SerializeField] private float comboWindow = 0.62f;
     [SerializeField] private float hitStartNormalizedTime = 0.3f;
     [SerializeField] private float hitEndNormalizedTime = 0.58f;
-    [SerializeField] private float attackRange = 2.2f;
-    [SerializeField] private float attackRadius = 0.9f;
+    [SerializeField] private float attackRange = 2.45f;
+    [SerializeField] private float attackRadius = 1.05f;
     [SerializeField] private float baseDamage = 34f;
     [SerializeField] private float counterDamageMultiplier = 2f;
     [SerializeField] private float ultimateGainPerHit = 4f;
@@ -286,7 +286,21 @@ public sealed class PlayerCombatController : MonoBehaviour
                 ultimateGainPerHit);
 
             AudioDirector.Instance?.PlayHit();
+            ApplyHitImpulse(direction);
         }
+    }
+
+    private static void ApplyHitImpulse(Vector3 direction)
+    {
+        Time.timeScale = 0.035f;
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+        Invoke(nameof(ReleaseHitImpulse), 0.018f);
+    }
+
+    private void ReleaseHitImpulse()
+    {
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = 0.02f;
     }
 
     private void CreateWeaponVisual()
