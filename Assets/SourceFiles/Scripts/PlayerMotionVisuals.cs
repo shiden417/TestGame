@@ -132,8 +132,8 @@ public sealed class PlayerMotionVisuals : MonoBehaviour
 
         float time = Time.unscaledTime;
         float gait = time * Mathf.Lerp(5f, 9.5f, speed01);
-        float moveBob = Mathf.Sin(gait * 1.55f) * 0.035f * speed01;
-        float sideSway = Mathf.Sin(gait) * 0.018f * speed01;
+        float moveBob = Mathf.Sin(gait * 1.55f) * 0.022f * speed01;
+        float sideSway = Mathf.Sin(gait) * 0.012f * speed01;
 
         float attackBlend = combatController.IsAttacking
             ? Mathf.Sin(Mathf.PI * combatController.AttackNormalizedTime)
@@ -151,10 +151,10 @@ public sealed class PlayerMotionVisuals : MonoBehaviour
             dodgeController.DodgeDirection);
         localDodge.y = 0f;
 
-        float dodgeLeanX = -localDodge.z * 10f * dodgeBlend;
-        float dodgeLeanZ = -localDodge.x * 14f * dodgeBlend;
-        float attackLeanX = -8f * attackBlend;
-        float attackLeanZ = GetAttackSide() * 6f * attackBlend;
+        float dodgeLeanX = -localDodge.z * 16f * dodgeBlend;
+        float dodgeLeanZ = -localDodge.x * 18f * dodgeBlend;
+        float attackLeanX = -12f * attackBlend;
+        float attackLeanZ = GetAttackSide() * 10f * attackBlend;
 
         visualRoot.localPosition = rootPosition;
         visualRoot.localRotation =
@@ -230,7 +230,7 @@ public sealed class PlayerMotionVisuals : MonoBehaviour
             * Quaternion.Euler(
                 -speed01 * 3f - attackBlend * 6f,
                 0f,
-                attackBlend * GetAttackSide() * 5f));
+                attackBlend * GetAttackSide() * 8f));
     }
 
     private float sideSwayDegrees()
