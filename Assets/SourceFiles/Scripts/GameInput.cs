@@ -49,7 +49,8 @@ public sealed class GameInput : MonoBehaviour
     {
         actionMap = new InputActionMap("Gameplay");
 
-        Move = actionMap.AddAction("Move", InputActionType.Value, expectedControlType: "Vector2");
+        Move = actionMap.AddAction("Move", InputActionType.Value);
+        Move.expectedControlType = "Vector2";
         Move.AddBinding("<Gamepad>/leftStick");
         Move.AddCompositeBinding("2DVector")
             .With("Up", "<Keyboard>/w")
@@ -57,10 +58,12 @@ public sealed class GameInput : MonoBehaviour
             .With("Left", "<Keyboard>/a")
             .With("Right", "<Keyboard>/d");
 
-        Look = actionMap.AddAction("Look", InputActionType.Value, expectedControlType: "Vector2");
+        Look = actionMap.AddAction("Look", InputActionType.Value);
+        Look.expectedControlType = "Vector2";
         Look.AddBinding("<Gamepad>/rightStick");
 
-        MouseLook = actionMap.AddAction("MouseLook", InputActionType.Value, expectedControlType: "Vector2");
+        MouseLook = actionMap.AddAction("MouseLook", InputActionType.Value);
+        MouseLook.expectedControlType = "Vector2";
         MouseLook.AddBinding("<Mouse>/delta");
 
         NormalAttack = CreateButtonAction("NormalAttack", "<Gamepad>/rightTrigger", "<Mouse>/leftButton");
