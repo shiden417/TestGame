@@ -14,7 +14,6 @@ public sealed class PlayerSkillController : MonoBehaviour
     [SerializeField] private float ultimateRange = 8f;
 
     private GameInput input;
-    private TargetingSystem targetingSystem;
     private PerfectDodgeSystem perfectDodgeSystem;
     private float skill1Timer;
     private float skill2Timer;
@@ -33,26 +32,21 @@ public sealed class PlayerSkillController : MonoBehaviour
 
     public void Initialize(
         GameInput gameInput,
-        TargetingSystem targeting,
         PerfectDodgeSystem perfectDodge)
     {
         if (gameInput == null)
         {
-            throw new System.ArgumentNullException(nameof(gameInput));
-        }
-
-        if (targeting == null)
-        {
-            throw new System.ArgumentNullException(nameof(targeting));
+            throw new System.ArgumentNullException(
+                nameof(gameInput));
         }
 
         if (perfectDodge == null)
         {
-            throw new System.ArgumentNullException(nameof(perfectDodge));
+            throw new System.ArgumentNullException(
+                nameof(perfectDodge));
         }
 
         input = gameInput;
-        targetingSystem = targeting;
         perfectDodgeSystem = perfectDodge;
         CreateSkillVisual();
     }
@@ -111,7 +105,8 @@ public sealed class PlayerSkillController : MonoBehaviour
 
     private void UseSkill1()
     {
-        skill1Timer = skill1Cooldown;
+        skill1Timer =
+            skill1Cooldown;
 
         PerformAreaDamage(
             skill1Range,
@@ -119,7 +114,10 @@ public sealed class PlayerSkillController : MonoBehaviour
             true);
 
         TriggerSkillVisual(
-            new Color(0.1f, 0.85f, 1f),
+            new Color(
+                0.1f,
+                0.85f,
+                1f),
             skill1Range,
             0.16f);
 
@@ -127,18 +125,22 @@ public sealed class PlayerSkillController : MonoBehaviour
             Mathf.Min(
                 100f,
                 ultimateGauge + 12f);
+
+        AudioDirector.Instance?.PlaySkill();
     }
 
     private void UseSkill2()
     {
-        skill2Timer = skill2Cooldown;
+        skill2Timer =
+            skill2Cooldown;
 
-        Vector3 forward = transform.forward;
+        Vector3 direction =
+            transform.forward;
 
         Vector3 center =
             transform.position
             + Vector3.up * 0.9f
-            + forward * 3.2f;
+            + direction * 3.2f;
 
         PerformDamageAt(
             center,
@@ -147,7 +149,10 @@ public sealed class PlayerSkillController : MonoBehaviour
             true);
 
         TriggerSkillVisual(
-            new Color(0.7f, 0.2f, 1f),
+            new Color(
+                0.7f,
+                0.2f,
+                1f),
             skill2Range,
             0.2f);
 
@@ -155,11 +160,15 @@ public sealed class PlayerSkillController : MonoBehaviour
             Mathf.Min(
                 100f,
                 ultimateGauge + 18f);
+
+        AudioDirector.Instance?.PlaySkill();
     }
 
     private void UseUltimate()
     {
-        ultimateTimer = ultimateCooldown;
+        ultimateTimer =
+            ultimateCooldown;
+
         ultimateGauge = 0f;
 
         PerformAreaDamage(
@@ -168,15 +177,22 @@ public sealed class PlayerSkillController : MonoBehaviour
             true);
 
         TriggerSkillVisual(
-            new Color(1f, 0.7f, 0.1f),
+            new Color(
+                1f,
+                0.7f,
+                0.1f),
             ultimateRange,
             0.42f);
+
+        AudioDirector.Instance?.PlayUltimate();
 
         Time.timeScale = 0.2f;
         Time.fixedDeltaTime =
             0.02f * Time.timeScale;
 
-        CancelInvoke(nameof(RestoreTimeScale));
+        CancelInvoke(
+            nameof(RestoreTimeScale));
+
         Invoke(
             nameof(RestoreTimeScale),
             0.42f);
@@ -219,7 +235,8 @@ public sealed class PlayerSkillController : MonoBehaviour
             }
 
             EnemyController enemy =
-                collider.GetComponentInParent<EnemyController>();
+                collider.GetComponentInParent<
+                    EnemyController>();
 
             if (enemy == null || !enemy.IsAlive)
             {
@@ -277,7 +294,9 @@ public sealed class PlayerSkillController : MonoBehaviour
             GameObject.CreatePrimitive(
                 PrimitiveType.Cylinder);
 
-        skillVisual.name = "SkillEffect";
+        skillVisual.name =
+            "SkillEffect";
+
         skillVisual.transform.position =
             transform.position
             + Vector3.up * 0.05f;
@@ -302,7 +321,8 @@ public sealed class PlayerSkillController : MonoBehaviour
         if (renderer != null)
         {
             Shader shader =
-                Shader.Find("Universal Render Pipeline/Lit")
+                Shader.Find(
+                    "Universal Render Pipeline/Lit")
                 ?? Shader.Find("Standard");
 
             if (shader != null)
@@ -315,7 +335,8 @@ public sealed class PlayerSkillController : MonoBehaviour
             }
         }
 
-        visualLifetime = duration;
+        visualLifetime =
+            Mathf.Max(0f, duration);
     }
 
     private void UpdateVisualLifetime()
@@ -334,7 +355,8 @@ public sealed class PlayerSkillController : MonoBehaviour
             420f * Time.unscaledDeltaTime,
             0f);
 
-        visualLifetime -= Time.unscaledDeltaTime;
+        visualLifetime -=
+            Time.unscaledDeltaTime;
 
         if (visualLifetime <= 0f)
         {
@@ -351,7 +373,8 @@ public sealed class PlayerSkillController : MonoBehaviour
 
     private void OnDestroy()
     {
-        CancelInvoke(nameof(RestoreTimeScale));
+        CancelInvoke(
+            nameof(RestoreTimeScale));
 
         if (skillVisual != null)
         {
