@@ -11,10 +11,12 @@ public sealed class PlayerCombatController : MonoBehaviour
     [SerializeField] private float attackRange = 2.2f;
     [SerializeField] private float attackRadius = 0.9f;
     [SerializeField] private float baseDamage = 34f;
+    [SerializeField] private float counterDamageMultiplier = 2f;
 
     private GameInput input;
     private TargetingSystem targetingSystem;
     private DodgeController dodgeController;
+    private PerfectDodgeSystem perfectDodgeSystem;
     private GameObject weaponVisual;
     private Material weaponMaterial;
     private float attackTimer;
@@ -29,7 +31,8 @@ public sealed class PlayerCombatController : MonoBehaviour
     public void Initialize(
         GameInput gameInput,
         TargetingSystem targeting,
-        DodgeController dodge)
+        DodgeController dodge,
+        PerfectDodgeSystem perfectDodge)
     {
         if (gameInput == null)
         {
@@ -46,9 +49,15 @@ public sealed class PlayerCombatController : MonoBehaviour
             throw new System.ArgumentNullException(nameof(dodge));
         }
 
+        if (perfectDodge == null)
+        {
+            throw new System.ArgumentNullException(nameof(perfectDodge));
+        }
+
         input = gameInput;
         targetingSystem = targeting;
         dodgeController = dodge;
+        perfectDodgeSystem = perfectDodge;
         CreateWeaponVisual();
     }
 
@@ -194,7 +203,7 @@ public sealed class PlayerCombatController : MonoBehaviour
             Physics.DefaultRaycastLayers,
             QueryTriggerInteraction.Ignore);
 
-        HashSet<CombatTarget> uniqueTargets = new HashSet<CombatTarget>();
+        HashSet<EnemyController> uniqueTargets = new HashSet<EnemyController>();
 
         foreach (Collider collider in colliders)
         {
@@ -203,7 +212,7 @@ public sealed class PlayerCombatController : MonoBehaviour
                 continue;
             }
 
-            CombatTarget target = collider.GetComponentInParent<CombatTarget>();
+            EnemyController target = collider.GetComponentInParent<EnemyController>();
             if (target == null || !target.IsAlive || !uniqueTargets.Add(target))
             {
                 continue;
@@ -217,7 +226,12 @@ public sealed class PlayerCombatController : MonoBehaviour
                 _ => 1f
             };
 
-            target.TakeDamage(baseDamage * damageMultiplier);
+            if (perfectDodgeSystem != null && perfectDodgeSystem.CounterWindowActive)
+            {
+                damageMultiplier *= counterDamageMultiplier;
+            }
+
+            target.TakeDamage(baseDamage * damageMultiplier, direction, true);
         }
     }
 
