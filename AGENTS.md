@@ -13,6 +13,25 @@ Before making changes, read:
 
 If existing prototype code conflicts with the specification, the specification wins unless the specification is explicitly changed.
 
+## Character Art Check
+
+When changing the protagonist model, procedural appearance, weapon presentation, or character materials, also read:
+
+docs/PLAYER_CHARACTER_ART_DIRECTION.md
+
+The following visual identity must be preserved unless the character-art specification is deliberately updated:
+
+- Narrow-waisted agile silhouette.
+- Asymmetric shoulders with heavier sword-side protection.
+- Sealed visor and vertical crest.
+- Futuristic combat armor derived from Japanese design language.
+- Compact rear energy unit.
+- Waist-mounted sword.
+- Graphite/deep blue-gray base with muted crimson identity accents and restrained cyan energy.
+- High mobility and unobstructed sword movement.
+
+Do not add decorative parts that materially reduce readability or imply a heavy-mech character unless the art specification is changed first.
+
 ## Mandatory Pre-Change Check
 
 Before changing code, answer these questions internally:
