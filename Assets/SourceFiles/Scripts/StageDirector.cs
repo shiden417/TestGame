@@ -329,36 +329,310 @@ public sealed class StageDirector : MonoBehaviour
     private GameObject CreateEnemyVisual(
         EnemyController.EnemyType type)
     {
-        PrimitiveType primitive =
+        PrimitiveType colliderPrimitive =
             type == EnemyController.EnemyType.Boss
                 ? PrimitiveType.Sphere
                 : PrimitiveType.Capsule;
 
         GameObject enemyObject =
-            GameObject.CreatePrimitive(primitive);
+            GameObject.CreatePrimitive(colliderPrimitive);
+
+        if (enemyObject == null)
+        {
+            throw new System.InvalidOperationException(
+                "Failed to create enemy root.");
+        }
 
         enemyObject.name =
             $"{type}Unit";
 
-        Color color =
-            type switch
-            {
-                EnemyController.EnemyType.Basic =>
-                    new Color(0.62f, 0.06f, 0.12f),
-                EnemyController.EnemyType.Heavy =>
-                    new Color(0.3f, 0.04f, 0.08f),
-                EnemyController.EnemyType.Ranged =>
-                    new Color(0.95f, 0.22f, 0.08f),
-                EnemyController.EnemyType.Elite =>
-                    new Color(0.68f, 0.12f, 0.85f),
-                EnemyController.EnemyType.Boss =>
-                    new Color(0.95f, 0.48f, 0.05f),
-                _ =>
-                    Color.red
-            };
+        Renderer rootRenderer =
+            enemyObject.GetComponent<Renderer>();
+
+        if (rootRenderer != null)
+        {
+            rootRenderer.enabled = false;
+        }
+
+        Transform visualRoot =
+            new GameObject("EnemyVisual").transform;
+
+        visualRoot.SetParent(
+            enemyObject.transform,
+            false);
+
+        visualRoot.localPosition = Vector3.zero;
+        visualRoot.localRotation = Quaternion.identity;
+        visualRoot.localScale =
+            type == EnemyController.EnemyType.Boss
+                ? Vector3.one * 1.35f
+                : Vector3.one;
+
+        switch (type)
+        {
+            case EnemyController.EnemyType.Basic:
+                BuildBasicEnemy(visualRoot);
+                break;
+
+            case EnemyController.EnemyType.Heavy:
+                BuildHeavyEnemy(visualRoot);
+                break;
+
+            case EnemyController.EnemyType.Ranged:
+                BuildRangedEnemy(visualRoot);
+                break;
+
+            case EnemyController.EnemyType.Elite:
+                BuildEliteEnemy(visualRoot);
+                break;
+
+            case EnemyController.EnemyType.Boss:
+                BuildBossEnemy(visualRoot);
+                break;
+        }
+
+        return enemyObject;
+    }
+
+    private void BuildBasicEnemy(Transform parent)
+    {
+        CreateEnemyPart(
+            "Core",
+            PrimitiveType.Capsule,
+            parent,
+            new Vector3(0f, 0.05f, 0f),
+            new Vector3(0.62f, 0.85f, 0.5f),
+            new Color(0.18f, 0.03f, 0.06f));
+
+        CreateEnemyPart(
+            "ChestPlate",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.35f, 0.27f),
+            new Vector3(0.55f, 0.3f, 0.12f),
+            new Color(0.3f, 0.04f, 0.08f));
+
+        CreateEnemyPart(
+            "Visor",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.52f, 0.3f),
+            new Vector3(0.3f, 0.08f, 0.04f),
+            new Color(0.98f, 0.12f, 0.28f));
+
+        CreateEnemyPart(
+            "BackFin",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.25f, -0.28f),
+            new Vector3(0.14f, 0.6f, 0.12f),
+            new Color(0.08f, 0.04f, 0.07f));
+    }
+
+    private void BuildHeavyEnemy(Transform parent)
+    {
+        CreateEnemyPart(
+            "Core",
+            PrimitiveType.Capsule,
+            parent,
+            new Vector3(0f, 0.05f, 0f),
+            new Vector3(0.78f, 1.02f, 0.62f),
+            new Color(0.1f, 0.025f, 0.05f));
+
+        CreateEnemyPart(
+            "ChestArmor",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.36f, 0.3f),
+            new Vector3(0.78f, 0.38f, 0.16f),
+            new Color(0.25f, 0.035f, 0.07f));
+
+        CreateEnemyPart(
+            "LeftShoulder",
+            PrimitiveType.Sphere,
+            parent,
+            new Vector3(-0.5f, 0.52f, 0f),
+            new Vector3(0.42f, 0.38f, 0.48f),
+            new Color(0.16f, 0.025f, 0.045f));
+
+        CreateEnemyPart(
+            "RightShoulder",
+            PrimitiveType.Sphere,
+            parent,
+            new Vector3(0.5f, 0.52f, 0f),
+            new Vector3(0.42f, 0.38f, 0.48f),
+            new Color(0.16f, 0.025f, 0.045f));
+
+        CreateEnemyPart(
+            "WarningCore",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.37f, 0.39f),
+            new Vector3(0.18f, 0.18f, 0.05f),
+            new Color(0.95f, 0.14f, 0.12f));
+    }
+
+    private void BuildRangedEnemy(Transform parent)
+    {
+        CreateEnemyPart(
+            "Core",
+            PrimitiveType.Capsule,
+            parent,
+            new Vector3(0f, 0.05f, 0f),
+            new Vector3(0.52f, 0.92f, 0.44f),
+            new Color(0.2f, 0.055f, 0.08f));
+
+        CreateEnemyPart(
+            "FocusLens",
+            PrimitiveType.Sphere,
+            parent,
+            new Vector3(0f, 0.22f, 0.34f),
+            new Vector3(0.22f, 0.22f, 0.1f),
+            new Color(1f, 0.18f, 0.42f));
+
+        CreateEnemyPart(
+            "Emitter",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.03f, 0.55f),
+            new Vector3(0.18f, 0.18f, 0.55f),
+            new Color(0.22f, 0.08f, 0.14f));
+
+        CreateEnemyPart(
+            "EmitterTip",
+            PrimitiveType.Sphere,
+            parent,
+            new Vector3(0f, 0.03f, 0.84f),
+            new Vector3(0.22f, 0.22f, 0.22f),
+            new Color(1f, 0.28f, 0.6f));
+    }
+
+    private void BuildEliteEnemy(Transform parent)
+    {
+        CreateEnemyPart(
+            "Core",
+            PrimitiveType.Capsule,
+            parent,
+            new Vector3(0f, 0.08f, 0f),
+            new Vector3(0.72f, 1.05f, 0.58f),
+            new Color(0.17f, 0.04f, 0.22f));
+
+        CreateEnemyPart(
+            "ChestSigil",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.38f, 0.34f),
+            new Vector3(0.3f, 0.3f, 0.08f),
+            new Color(0.72f, 0.16f, 0.96f));
+
+        CreateEnemyPart(
+            "Crest",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0.76f, 0f),
+            new Vector3(0.12f, 0.55f, 0.12f),
+            new Color(0.48f, 0.08f, 0.68f));
+
+        CreateEnemyPart(
+            "LeftBlade",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(-0.62f, 0.05f, 0f),
+            new Vector3(0.08f, 0.7f, 0.18f),
+            new Color(0.36f, 0.1f, 0.46f));
+
+        CreateEnemyPart(
+            "RightBlade",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0.62f, 0.05f, 0f),
+            new Vector3(0.08f, 0.7f, 0.18f),
+            new Color(0.36f, 0.1f, 0.46f));
+    }
+
+    private void BuildBossEnemy(Transform parent)
+    {
+        CreateEnemyPart(
+            "Core",
+            PrimitiveType.Sphere,
+            parent,
+            Vector3.zero,
+            new Vector3(1.2f, 1.25f, 1.15f),
+            new Color(0.14f, 0.025f, 0.045f));
+
+        CreateEnemyPart(
+            "CentralEye",
+            PrimitiveType.Sphere,
+            parent,
+            new Vector3(0f, 0.05f, 0.96f),
+            new Vector3(0.38f, 0.28f, 0.1f),
+            new Color(1f, 0.24f, 0.05f));
+
+        CreateEnemyPart(
+            "LeftHorn",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(-0.72f, 0.65f, 0f),
+            new Vector3(0.18f, 0.7f, 0.18f),
+            new Color(0.26f, 0.05f, 0.08f));
+
+        CreateEnemyPart(
+            "RightHorn",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0.72f, 0.65f, 0f),
+            new Vector3(0.18f, 0.7f, 0.18f),
+            new Color(0.26f, 0.05f, 0.08f));
+
+        CreateEnemyPart(
+            "EnergySpine",
+            PrimitiveType.Cube,
+            parent,
+            new Vector3(0f, 0f, -0.82f),
+            new Vector3(0.22f, 1.25f, 0.12f),
+            new Color(0.9f, 0.18f, 0.04f));
+
+        CreateEnemyPart(
+            "AuraCore",
+            PrimitiveType.Sphere,
+            parent,
+            new Vector3(0f, 0f, 0f),
+            new Vector3(0.7f, 0.74f, 0.68f),
+            new Color(0.42f, 0.08f, 0.1f));
+    }
+
+    private static GameObject CreateEnemyPart(
+        string objectName,
+        PrimitiveType primitiveType,
+        Transform parent,
+        Vector3 localPosition,
+        Vector3 localScale,
+        Color color)
+    {
+        GameObject part =
+            GameObject.CreatePrimitive(primitiveType);
+
+        if (part == null)
+        {
+            throw new System.InvalidOperationException(
+                $"Failed to create enemy visual: {objectName}");
+        }
+
+        part.name = objectName;
+        part.transform.SetParent(parent, false);
+        part.transform.localPosition = localPosition;
+        part.transform.localScale = localScale;
+
+        Collider collider =
+            part.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
 
         Renderer renderer =
-            enemyObject.GetComponent<Renderer>();
+            part.GetComponent<Renderer>();
 
         if (renderer != null)
         {
@@ -367,17 +641,43 @@ public sealed class StageDirector : MonoBehaviour
                     "Universal Render Pipeline/Lit")
                 ?? Shader.Find("Standard");
 
-            if (shader != null)
+            if (shader == null)
             {
-                renderer.material =
-                    new Material(shader)
-                    {
-                        color = color
-                    };
+                throw new System.InvalidOperationException(
+                    "No compatible Unity material shader was found.");
             }
+
+            Material material =
+                new Material(shader)
+                {
+                    color = color
+                };
+
+            if (material.HasProperty("_Metallic"))
+            {
+                material.SetFloat("_Metallic", 0.35f);
+            }
+
+            if (material.HasProperty("_Smoothness"))
+            {
+                material.SetFloat("_Smoothness", 0.82f);
+            }
+
+            if (color.g > 0.45f || color.b > 0.45f)
+            {
+                if (material.HasProperty("_EmissionColor"))
+                {
+                    material.EnableKeyword("_EMISSION");
+                    material.SetColor(
+                        "_EmissionColor",
+                        color * 1.35f);
+                }
+            }
+
+            renderer.material = material;
         }
 
-        return enemyObject;
+        return part;
     }
 
     private void HandleDefeat()
