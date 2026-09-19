@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 [DisallowMultipleComponent]
@@ -212,6 +213,8 @@ public sealed class GameBootstrap : MonoBehaviour
         }
 
         cameraData.renderType = CameraRenderType.Base;
+        cameraData.renderPostProcessing = true;
+        CreateCinematicVolume();
 
         cameraController =
             cameraObject.AddComponent<
@@ -222,6 +225,40 @@ public sealed class GameBootstrap : MonoBehaviour
                 0f,
                 5.8f,
                 -16f);
+    }
+
+    private static void CreateCinematicVolume()
+    {
+        GameObject volumeObject = new GameObject("CinematicVolume");
+        Volume volume = volumeObject.AddComponent<Volume>();
+
+        if (volume == null)
+        {
+            return;
+        }
+
+        volume.isGlobal = true;
+        volume.priority = 10f;
+
+        VolumeProfile profile = ScriptableObject.CreateInstance<VolumeProfile>();
+        volume.profile = profile;
+
+        Bloom bloom = profile.Add<Bloom>(true);
+        bloom.threshold.Override(0.72f);
+        bloom.intensity.Override(3.2f);
+        bloom.scatter.Override(0.72f);
+
+        ColorAdjustments color = profile.Add<ColorAdjustments>(true);
+        color.postExposure.Override(0.18f);
+        color.contrast.Override(12f);
+        color.saturation.Override(-8f);
+
+        Vignette vignette = profile.Add<Vignette>(true);
+        vignette.intensity.Override(0.16f);
+        vignette.smoothness.Override(0.72f);
+
+        Tonemapping tonemapping = profile.Add<Tonemapping>(true);
+        tonemapping.mode.Override(TonemappingMode.ACES);
     }
 
     private void WirePlayerSystems()
