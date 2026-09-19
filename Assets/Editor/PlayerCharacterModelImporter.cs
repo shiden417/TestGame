@@ -87,3 +87,4 @@ public sealed class PlayerCharacterModelImporter : AssetPostprocessor
         return controller;
     }
 }
+#endif
