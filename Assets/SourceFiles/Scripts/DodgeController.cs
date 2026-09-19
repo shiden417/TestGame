@@ -3,9 +3,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class DodgeController : MonoBehaviour
 {
-    [SerializeField] private float dodgeDistance = 4f;
-    [SerializeField] private float dodgeDuration = 0.22f;
-    [SerializeField] private float dodgeCooldown = 0.35f;
+    [SerializeField] private float dodgeDistance = 4.8f;
+    [SerializeField] private float dodgeDuration = 0.17f;
+    [SerializeField] private float dodgeCooldown = 0.28f;
 
     private CharacterController characterController;
     private GameInput input;
