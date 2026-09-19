@@ -4,10 +4,10 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 6.5f;
-    [SerializeField] private float acceleration = 28f;
-    [SerializeField] private float deceleration = 34f;
-    [SerializeField] private float rotationSpeed = 18f;
+    [SerializeField] private float moveSpeed = 7.5f;
+    [SerializeField] private float acceleration = 38f;
+    [SerializeField] private float deceleration = 48f;
+    [SerializeField] private float rotationSpeed = 24f;
     [SerializeField] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -22f;
 
@@ -19,7 +19,7 @@ public sealed class PlayerController : MonoBehaviour
     private Vector3 horizontalVelocity;
     private float verticalVelocity;
 
-    public bool IsGrounded => characterController != null && characterController.isGrounded;
+    public bool IsGrounded => characterController != null && characterController.isGrounded;\n    public float CurrentSpeed => new Vector3(horizontalVelocity.x, 0f, horizontalVelocity.z).magnitude;\n    public float MaxMoveSpeed => moveSpeed;\n    public Vector3 MovementVelocity => horizontalVelocity;
 
     public void Initialize(
         GameInput gameInput,
