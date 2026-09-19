@@ -25,166 +25,98 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
         visualRoot.localRotation = Quaternion.identity;
         visualRoot.localScale = Vector3.one;
 
-        CreateBody(visualRoot);
-        CreateHead(visualRoot);
-        CreateArms(visualRoot);
-        CreateLegs(visualRoot);
-        CreateArmor(visualRoot);
-        CreateBackUnit(visualRoot);
-        CreateEnergyDetails(visualRoot);
-        CreateSwordMount(visualRoot);
+        BuildHumanSilhouette(visualRoot);
+        BuildHead(visualRoot);
+        BuildArms(visualRoot);
+        BuildLegs(visualRoot);
+        BuildArmor(visualRoot);
+        BuildRearEnergyUnit(visualRoot);
+        BuildSword(visualRoot);
+        BuildEnergyDetails(visualRoot);
     }
 
-    private void CreateBody(Transform parent)
+    private void BuildHumanSilhouette(Transform parent)
     {
-        CreateCapsule("BodySuit", parent, new Vector3(0f, 0.12f, 0f),
-            new Vector3(0.46f, 0.78f, 0.32f), new Color(0.045f, 0.055f, 0.075f));
+        CreateCapsule("Torso", parent, new Vector3(0f, 0.35f, 0f), new Vector3(0.42f, 0.72f, 0.28f), new Color(0.035f, 0.045f, 0.065f));
+        CreateCapsule("Neck", parent, new Vector3(0f, 0.84f, 0f), new Vector3(0.12f, 0.18f, 0.12f), new Color(0.045f, 0.05f, 0.07f));
+        CreateSphere("Pelvis", parent, new Vector3(0f, -0.32f, 0f), new Vector3(0.44f, 0.28f, 0.30f), new Color(0.045f, 0.055f, 0.08f));
 
-        CreateCapsule("ChestArmor", parent, new Vector3(0f, 0.43f, 0.03f),
-            new Vector3(0.58f, 0.5f, 0.4f), new Color(0.10f, 0.13f, 0.18f));
+        CreateCapsule("LeftUpperArm", parent, new Vector3(-0.42f, 0.34f, 0f), new Vector3(0.12f, 0.40f, 0.12f), new Color(0.055f, 0.065f, 0.09f));
+        CreateCapsule("RightUpperArm", parent, new Vector3(0.42f, 0.34f, 0f), new Vector3(0.12f, 0.40f, 0.12f), new Color(0.055f, 0.065f, 0.09f));
+        CreateCapsule("LeftForearm", parent, new Vector3(-0.50f, -0.05f, 0.015f), new Vector3(0.105f, 0.38f, 0.105f), new Color(0.065f, 0.075f, 0.10f));
+        CreateCapsule("RightForearm", parent, new Vector3(0.50f, -0.05f, 0.015f), new Vector3(0.105f, 0.38f, 0.105f), new Color(0.065f, 0.075f, 0.10f));
+        CreateSphere("LeftHand", parent, new Vector3(-0.50f, -0.30f, 0.02f), new Vector3(0.12f, 0.14f, 0.11f), new Color(0.04f, 0.045f, 0.06f));
+        CreateSphere("RightHand", parent, new Vector3(0.50f, -0.30f, 0.02f), new Vector3(0.12f, 0.14f, 0.11f), new Color(0.04f, 0.045f, 0.06f));
 
-        CreateSphere("ChestPlate", parent, new Vector3(0f, 0.49f, 0.30f),
-            new Vector3(0.48f, 0.36f, 0.12f), new Color(0.16f, 0.20f, 0.27f));
-
-        CreateCapsule("Neck", parent, new Vector3(0f, 0.88f, 0f),
-            new Vector3(0.15f, 0.22f, 0.15f), new Color(0.055f, 0.065f, 0.085f));
-
-        CreateCapsule("PelvisSuit", parent, new Vector3(0f, -0.38f, 0f),
-            new Vector3(0.38f, 0.30f, 0.28f), new Color(0.055f, 0.065f, 0.085f));
-
-        CreateSphere("PelvisArmor", parent, new Vector3(0f, -0.34f, 0.05f),
-            new Vector3(0.62f, 0.28f, 0.38f), new Color(0.12f, 0.15f, 0.20f));
+        CreateCapsule("LeftThigh", parent, new Vector3(-0.18f, -0.70f, 0f), new Vector3(0.15f, 0.52f, 0.15f), new Color(0.055f, 0.065f, 0.09f));
+        CreateCapsule("RightThigh", parent, new Vector3(0.18f, -0.70f, 0f), new Vector3(0.15f, 0.52f, 0.15f), new Color(0.055f, 0.065f, 0.09f));
+        CreateCapsule("LeftShin", parent, new Vector3(-0.18f, -1.28f, 0.015f), new Vector3(0.115f, 0.52f, 0.12f), new Color(0.07f, 0.08f, 0.11f));
+        CreateCapsule("RightShin", parent, new Vector3(0.18f, -1.28f, 0.015f), new Vector3(0.115f, 0.52f, 0.12f), new Color(0.07f, 0.08f, 0.11f));
+        CreateSphere("LeftFoot", parent, new Vector3(-0.18f, -1.62f, 0.12f), new Vector3(0.15f, 0.11f, 0.28f), new Color(0.04f, 0.05f, 0.07f));
+        CreateSphere("RightFoot", parent, new Vector3(0.18f, -1.62f, 0.12f), new Vector3(0.15f, 0.11f, 0.28f), new Color(0.04f, 0.05f, 0.07f));
     }
 
-    private void CreateHead(Transform parent)
+    private void BuildHead(Transform parent)
     {
-        CreateSphere("Head", parent, new Vector3(0f, 1.16f, 0f),
-            new Vector3(0.34f, 0.40f, 0.31f), new Color(0.055f, 0.065f, 0.09f));
-
-        CreateSphere("FaceShell", parent, new Vector3(0f, 1.10f, 0.18f),
-            new Vector3(0.28f, 0.25f, 0.20f), new Color(0.075f, 0.09f, 0.12f));
-
-        CreateCube("Visor", parent, new Vector3(0f, 1.18f, 0.30f),
-            new Vector3(0.30f, 0.045f, 0.035f), new Color(0.08f, 0.92f, 1f));
-
-        CreateCapsule("HelmetCrest", parent, new Vector3(0f, 1.48f, -0.01f),
-            new Vector3(0.055f, 0.25f, 0.065f), new Color(0.42f, 0.035f, 0.09f));
-
-        CreateSphere("HelmetRearShell", parent, new Vector3(0f, 1.19f, -0.14f),
-            new Vector3(0.36f, 0.30f, 0.18f), new Color(0.09f, 0.11f, 0.15f));
+        CreateSphere("Head", parent, new Vector3(0f, 1.10f, 0f), new Vector3(0.28f, 0.34f, 0.25f), new Color(0.035f, 0.045f, 0.065f));
+        CreateSphere("FaceShell", parent, new Vector3(0f, 1.07f, 0.16f), new Vector3(0.235f, 0.22f, 0.13f), new Color(0.055f, 0.065f, 0.09f));
+        CreateSphere("Visor", parent, new Vector3(0f, 1.14f, 0.245f), new Vector3(0.235f, 0.035f, 0.025f), new Color(0.02f, 0.8f, 0.95f));
+        CreateCapsule("HelmetCrest", parent, new Vector3(0f, 1.39f, -0.015f), new Vector3(0.035f, 0.20f, 0.045f), new Color(0.32f, 0.025f, 0.07f));
+        CreateSphere("HelmetRearShell", parent, new Vector3(0f, 1.11f, -0.12f), new Vector3(0.30f, 0.25f, 0.16f), new Color(0.055f, 0.065f, 0.09f));
     }
 
-    private void CreateArms(Transform parent)
+    private void BuildArms(Transform parent)
     {
-        CreateCapsule("LeftUpperArm", parent, new Vector3(-0.47f, 0.38f, 0f),
-            new Vector3(0.15f, 0.42f, 0.15f), new Color(0.07f, 0.085f, 0.115f));
-        CreateCapsule("RightUpperArm", parent, new Vector3(0.47f, 0.38f, 0f),
-            new Vector3(0.15f, 0.42f, 0.15f), new Color(0.07f, 0.085f, 0.115f));
-
-        CreateSphere("LeftShoulder", parent, new Vector3(-0.50f, 0.66f, 0f),
-            new Vector3(0.27f, 0.22f, 0.28f), new Color(0.14f, 0.17f, 0.22f));
-        CreateSphere("RightShoulder", parent, new Vector3(0.52f, 0.68f, 0f),
-            new Vector3(0.32f, 0.27f, 0.34f), new Color(0.12f, 0.15f, 0.20f));
-
-        CreateCapsule("LeftForearm", parent, new Vector3(-0.55f, -0.02f, 0.06f),
-            new Vector3(0.14f, 0.40f, 0.14f), new Color(0.13f, 0.15f, 0.20f));
-        CreateCapsule("RightForearm", parent, new Vector3(0.55f, -0.02f, 0.06f),
-            new Vector3(0.14f, 0.40f, 0.14f), new Color(0.13f, 0.15f, 0.20f));
-
-        CreateSphere("LeftElbow", parent, new Vector3(-0.55f, 0.17f, 0.07f),
-            new Vector3(0.17f, 0.16f, 0.17f), new Color(0.10f, 0.12f, 0.16f));
-        CreateSphere("RightElbow", parent, new Vector3(0.55f, 0.17f, 0.07f),
-            new Vector3(0.17f, 0.16f, 0.17f), new Color(0.10f, 0.12f, 0.16f));
-
-        CreateSphere("LeftHand", parent, new Vector3(-0.55f, -0.28f, 0.06f),
-            new Vector3(0.15f, 0.17f, 0.13f), new Color(0.045f, 0.055f, 0.075f));
-        CreateSphere("RightHand", parent, new Vector3(0.55f, -0.28f, 0.06f),
-            new Vector3(0.15f, 0.17f, 0.13f), new Color(0.045f, 0.055f, 0.075f));
+        CreateSphere("LeftShoulder", parent, new Vector3(-0.46f, 0.62f, 0f), new Vector3(0.19f, 0.17f, 0.21f), new Color(0.10f, 0.12f, 0.16f));
+        CreateSphere("RightShoulder", parent, new Vector3(0.49f, 0.64f, 0f), new Vector3(0.25f, 0.21f, 0.27f), new Color(0.11f, 0.13f, 0.17f));
+        CreateSphere("LeftElbow", parent, new Vector3(-0.50f, 0.16f, 0.03f), new Vector3(0.125f, 0.13f, 0.13f), new Color(0.08f, 0.095f, 0.125f));
+        CreateSphere("RightElbow", parent, new Vector3(0.50f, 0.16f, 0.03f), new Vector3(0.125f, 0.13f, 0.13f), new Color(0.08f, 0.095f, 0.125f));
     }
 
-    private void CreateLegs(Transform parent)
+    private void BuildLegs(Transform parent)
     {
-        CreateCapsule("LeftThigh", parent, new Vector3(-0.23f, -0.78f, 0f),
-            new Vector3(0.19f, 0.55f, 0.19f), new Color(0.07f, 0.085f, 0.115f));
-        CreateCapsule("RightThigh", parent, new Vector3(0.23f, -0.78f, 0f),
-            new Vector3(0.19f, 0.55f, 0.19f), new Color(0.07f, 0.085f, 0.115f));
-
-        CreateSphere("LeftKnee", parent, new Vector3(-0.23f, -1.16f, 0.10f),
-            new Vector3(0.20f, 0.18f, 0.15f), new Color(0.17f, 0.20f, 0.26f));
-        CreateSphere("RightKnee", parent, new Vector3(0.23f, -1.16f, 0.10f),
-            new Vector3(0.20f, 0.18f, 0.15f), new Color(0.17f, 0.20f, 0.26f));
-
-        CreateCapsule("LeftShin", parent, new Vector3(-0.23f, -1.45f, 0.02f),
-            new Vector3(0.15f, 0.48f, 0.16f), new Color(0.12f, 0.14f, 0.19f));
-        CreateCapsule("RightShin", parent, new Vector3(0.23f, -1.45f, 0.02f),
-            new Vector3(0.15f, 0.48f, 0.16f), new Color(0.12f, 0.14f, 0.19f));
-
-        CreateSphere("LeftBoot", parent, new Vector3(-0.23f, -1.76f, 0.13f),
-            new Vector3(0.21f, 0.16f, 0.36f), new Color(0.055f, 0.065f, 0.09f));
-        CreateSphere("RightBoot", parent, new Vector3(0.23f, -1.76f, 0.13f),
-            new Vector3(0.21f, 0.16f, 0.36f), new Color(0.055f, 0.065f, 0.09f));
+        CreateSphere("LeftKnee", parent, new Vector3(-0.18f, -1.00f, 0.075f), new Vector3(0.145f, 0.13f, 0.12f), new Color(0.11f, 0.13f, 0.17f));
+        CreateSphere("RightKnee", parent, new Vector3(0.18f, -1.00f, 0.075f), new Vector3(0.145f, 0.13f, 0.12f), new Color(0.11f, 0.13f, 0.17f));
+        CreateSphere("LeftBootArmor", parent, new Vector3(-0.18f, -1.53f, 0.07f), new Vector3(0.16f, 0.16f, 0.24f), new Color(0.075f, 0.09f, 0.12f));
+        CreateSphere("RightBootArmor", parent, new Vector3(0.18f, -1.53f, 0.07f), new Vector3(0.16f, 0.16f, 0.24f), new Color(0.075f, 0.09f, 0.12f));
     }
 
-    private void CreateArmor(Transform parent)
+    private void BuildArmor(Transform parent)
     {
-        CreateSphere("ChestLeftArmor", parent, new Vector3(-0.25f, 0.52f, 0.30f),
-            new Vector3(0.30f, 0.25f, 0.09f), new Color(0.16f, 0.19f, 0.25f));
-        CreateSphere("ChestRightArmor", parent, new Vector3(0.25f, 0.52f, 0.30f),
-            new Vector3(0.30f, 0.25f, 0.09f), new Color(0.16f, 0.19f, 0.25f));
+        CreateSphere("ChestCoreArmor", parent, new Vector3(0f, 0.45f, 0.245f), new Vector3(0.39f, 0.30f, 0.08f), new Color(0.11f, 0.14f, 0.19f));
+        CreateSphere("ChestLeftPlate", parent, new Vector3(-0.22f, 0.49f, 0.25f), new Vector3(0.23f, 0.20f, 0.075f), new Color(0.14f, 0.17f, 0.22f));
+        CreateSphere("ChestRightPlate", parent, new Vector3(0.22f, 0.49f, 0.25f), new Vector3(0.23f, 0.20f, 0.075f), new Color(0.14f, 0.17f, 0.22f));
+        CreateSphere("CollarGuard", parent, new Vector3(0f, 0.79f, 0.01f), new Vector3(0.34f, 0.10f, 0.20f), new Color(0.12f, 0.14f, 0.19f));
 
-        CreateSphere("CollarGuard", parent, new Vector3(0f, 0.83f, 0.02f),
-            new Vector3(0.45f, 0.13f, 0.30f), new Color(0.16f, 0.19f, 0.25f));
-
-        CreateSphere("LeftHipArmor", parent, new Vector3(-0.38f, -0.43f, 0.03f),
-            new Vector3(0.22f, 0.32f, 0.27f), new Color(0.12f, 0.14f, 0.19f));
-        CreateSphere("RightHipArmor", parent, new Vector3(0.38f, -0.43f, 0.03f),
-            new Vector3(0.22f, 0.32f, 0.27f), new Color(0.20f, 0.07f, 0.12f));
-
-        CreateCapsule("RightShoulderPlate", parent, new Vector3(0.53f, 0.70f, 0.02f),
-            new Vector3(0.23f, 0.20f, 0.26f), new Color(0.12f, 0.15f, 0.20f));
+        CreateSphere("LeftHipArmor", parent, new Vector3(-0.32f, -0.34f, 0.02f), new Vector3(0.16f, 0.22f, 0.20f), new Color(0.09f, 0.11f, 0.15f));
+        CreateSphere("RightHipArmor", parent, new Vector3(0.32f, -0.34f, 0.02f), new Vector3(0.17f, 0.23f, 0.21f), new Color(0.19f, 0.055f, 0.10f));
+        CreateSphere("RightShoulderPlate", parent, new Vector3(0.51f, 0.69f, 0.02f), new Vector3(0.24f, 0.18f, 0.25f), new Color(0.13f, 0.15f, 0.20f));
+        CreateSphere("LeftShoulderPlate", parent, new Vector3(-0.48f, 0.67f, 0.02f), new Vector3(0.18f, 0.14f, 0.19f), new Color(0.10f, 0.12f, 0.16f));
     }
 
-    private void CreateBackUnit(Transform parent)
+    private void BuildRearEnergyUnit(Transform parent)
     {
-        CreateCapsule("BackEnergyUnit", parent, new Vector3(0f, 0.22f, -0.42f),
-            new Vector3(0.20f, 0.48f, 0.11f), new Color(0.045f, 0.10f, 0.15f));
-
-        CreateCapsule("BackEnergyCore", parent, new Vector3(0f, 0.22f, -0.52f),
-            new Vector3(0.07f, 0.35f, 0.035f), new Color(0.04f, 0.85f, 1f));
-
-        CreateCapsule("LeftBackFin", parent, new Vector3(-0.22f, 0.34f, -0.34f),
-            new Vector3(0.055f, 0.34f, 0.12f), new Color(0.12f, 0.15f, 0.20f));
-        CreateCapsule("RightBackFin", parent, new Vector3(0.22f, 0.34f, -0.34f),
-            new Vector3(0.055f, 0.34f, 0.12f), new Color(0.12f, 0.15f, 0.20f));
+        CreateCapsule("RearEnergyHousing", parent, new Vector3(0f, 0.22f, -0.29f), new Vector3(0.14f, 0.34f, 0.075f), new Color(0.045f, 0.075f, 0.11f));
+        CreateCapsule("RearEnergyCore", parent, new Vector3(0f, 0.22f, -0.365f), new Vector3(0.045f, 0.27f, 0.025f), new Color(0.03f, 0.85f, 1f));
+        CreateCapsule("LeftRearFin", parent, new Vector3(-0.15f, 0.32f, -0.25f), new Vector3(0.035f, 0.25f, 0.07f), new Color(0.09f, 0.11f, 0.15f));
+        CreateCapsule("RightRearFin", parent, new Vector3(0.15f, 0.32f, -0.25f), new Vector3(0.035f, 0.25f, 0.07f), new Color(0.09f, 0.11f, 0.15f));
     }
 
-    private void CreateEnergyDetails(Transform parent)
+    private void BuildSword(Transform parent)
     {
-        CreateCube("ChestEnergyLine", parent, new Vector3(0f, 0.48f, 0.405f),
-            new Vector3(0.035f, 0.42f, 0.025f), new Color(0.08f, 0.9f, 1f));
-
-        CreateCube("RightChestAccent", parent, new Vector3(0.30f, 0.60f, 0.385f),
-            new Vector3(0.035f, 0.18f, 0.025f), new Color(0.65f, 0.045f, 0.12f));
-
-        CreateCube("LeftBootLight", parent, new Vector3(-0.23f, -1.76f, 0.39f),
-            new Vector3(0.06f, 0.045f, 0.10f), new Color(0.08f, 0.8f, 1f));
-        CreateCube("RightBootLight", parent, new Vector3(0.23f, -1.76f, 0.39f),
-            new Vector3(0.06f, 0.045f, 0.10f), new Color(0.08f, 0.8f, 1f));
+        CreateCapsule("SwordSheath", parent, new Vector3(-0.43f, -0.15f, -0.06f), new Vector3(0.045f, 0.56f, 0.045f), new Color(0.025f, 0.03f, 0.045f));
+        CreateCapsule("SwordHandle", parent, new Vector3(-0.43f, 0.23f, 0.13f), new Vector3(0.042f, 0.20f, 0.042f), new Color(0.13f, 0.14f, 0.17f));
+        CreateSphere("SwordGuard", parent, new Vector3(-0.43f, 0.01f, 0.15f), new Vector3(0.10f, 0.025f, 0.045f), new Color(0.55f, 0.38f, 0.12f));
+        CreateSphere("SwordMount", parent, new Vector3(-0.43f, -0.12f, -0.01f), new Vector3(0.08f, 0.06f, 0.06f), new Color(0.52f, 0.04f, 0.10f));
     }
 
-    private void CreateSwordMount(Transform parent)
+    private void BuildEnergyDetails(Transform parent)
     {
-        CreateCapsule("SwordSheath", parent, new Vector3(-0.48f, -0.12f, -0.04f),
-            new Vector3(0.07f, 0.65f, 0.07f), new Color(0.035f, 0.04f, 0.06f));
-
-        CreateCapsule("SwordHandle", parent, new Vector3(-0.48f, 0.25f, 0.20f),
-            new Vector3(0.065f, 0.24f, 0.065f), new Color(0.16f, 0.17f, 0.20f));
-
-        CreateCube("SwordGuard", parent, new Vector3(-0.48f, 0.02f, 0.22f),
-            new Vector3(0.22f, 0.045f, 0.06f), new Color(0.68f, 0.48f, 0.16f));
-
-        CreateCube("SwordSheathAccent", parent, new Vector3(-0.48f, 0.08f, 0.06f),
-            new Vector3(0.10f, 0.07f, 0.025f), new Color(0.55f, 0.045f, 0.12f));
+        CreateSphere("ChestEnergySeal", parent, new Vector3(0f, 0.48f, 0.335f), new Vector3(0.035f, 0.16f, 0.018f), new Color(0.05f, 0.9f, 1f));
+        CreateSphere("ChestEnergyNode", parent, new Vector3(0f, 0.48f, 0.35f), new Vector3(0.075f, 0.045f, 0.018f), new Color(0.05f, 0.9f, 1f));
+        CreateSphere("RightChestCrimson", parent, new Vector3(0.27f, 0.57f, 0.33f), new Vector3(0.025f, 0.10f, 0.018f), new Color(0.65f, 0.035f, 0.10f));
+        CreateSphere("LeftBootEnergy", parent, new Vector3(-0.18f, -1.55f, 0.275f), new Vector3(0.025f, 0.035f, 0.06f), new Color(0.05f, 0.8f, 1f));
+        CreateSphere("RightBootEnergy", parent, new Vector3(0.18f, -1.55f, 0.275f), new Vector3(0.025f, 0.035f, 0.06f), new Color(0.05f, 0.8f, 1f));
     }
 
     private static void CreateCube(string objectName, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
@@ -202,13 +134,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
         CreatePrimitive(PrimitiveType.Capsule, objectName, parent, localPosition, localScale, color);
     }
 
-    private static GameObject CreatePrimitive(
-        PrimitiveType primitiveType,
-        string objectName,
-        Transform parent,
-        Vector3 localPosition,
-        Vector3 localScale,
-        Color color)
+    private static GameObject CreatePrimitive(PrimitiveType primitiveType, string objectName, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
     {
         GameObject part = GameObject.CreatePrimitive(primitiveType);
         if (part == null)
@@ -239,9 +165,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             throw new System.InvalidOperationException($"Player visual renderer was not created: {target.name}");
         }
 
-        Shader shader = Shader.Find("Universal Render Pipeline/Lit")
-            ?? Shader.Find("Standard");
-
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
         if (shader == null)
         {
             throw new System.InvalidOperationException("No compatible Unity material shader was found.");
@@ -254,18 +178,18 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
 
         if (material.HasProperty("_Metallic"))
         {
-            material.SetFloat("_Metallic", 0.48f);
+            material.SetFloat("_Metallic", 0.55f);
         }
 
         if (material.HasProperty("_Smoothness"))
         {
-            material.SetFloat("_Smoothness", 0.72f);
+            material.SetFloat("_Smoothness", 0.76f);
         }
 
         if (color.g > 0.55f && color.b > 0.55f && material.HasProperty("_EmissionColor"))
         {
             material.EnableKeyword("_EMISSION");
-            material.SetColor("_EmissionColor", color * 2.0f);
+            material.SetColor("_EmissionColor", color * 2.4f);
         }
 
         renderer.material = material;
