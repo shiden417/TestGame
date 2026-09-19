@@ -38,6 +38,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
         CreateCoreBody(visualRoot);
         CreateHead(visualRoot);
         CreateTorsoArmor(visualRoot);
+        CreateSuitDetails(visualRoot);
         CreateShoulderArmor(visualRoot);
         CreateArmArmor(visualRoot);
         CreateLegArmor(visualRoot);
@@ -92,7 +93,21 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             parent,
             new Vector3(0f, 1.56f, -0.02f),
             new Vector3(0.12f, 0.34f, 0.1f),
-            new Color(0.55f, 0.08f, 0.16f));
+            new Color(0.42f, 0.055f, 0.12f));
+
+        CreateCube(
+            "HelmetSideLeft",
+            parent,
+            new Vector3(-0.28f, 1.18f, 0.03f),
+            new Vector3(0.09f, 0.26f, 0.28f),
+            new Color(0.12f, 0.15f, 0.2f));
+
+        CreateCube(
+            "HelmetSideRight",
+            parent,
+            new Vector3(0.28f, 1.18f, 0.03f),
+            new Vector3(0.09f, 0.26f, 0.28f),
+            new Color(0.12f, 0.15f, 0.2f));
     }
 
     private void CreateTorsoArmor(Transform parent)
@@ -109,7 +124,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             parent,
             new Vector3(0f, 0.55f, 0.41f),
             new Vector3(0.28f, 0.3f, 0.08f),
-            new Color(0.55f, 0.08f, 0.16f));
+            new Color(0.3f, 0.05f, 0.1f));
 
         CreateCube(
             "CollarGuard",
@@ -133,7 +148,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             parent,
             new Vector3(0.55f, 0.73f, 0f),
             new Vector3(0.42f, 0.34f, 0.5f),
-            new Color(0.55f, 0.08f, 0.16f));
+            new Color(0.13f, 0.16f, 0.21f));
 
         CreateCube(
             "RightShoulderEdge",
@@ -141,6 +156,65 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             new Vector3(0.55f, 0.88f, 0.18f),
             new Vector3(0.44f, 0.07f, 0.08f),
             new Color(0.09f, 0.76f, 1f));
+    }
+
+    private void CreateSuitDetails(Transform parent)
+    {
+        CreateCube(
+            "ChestLeftPlate",
+            parent,
+            new Vector3(-0.22f, 0.58f, 0.39f),
+            new Vector3(0.3f, 0.2f, 0.07f),
+            new Color(0.17f, 0.21f, 0.28f));
+
+        CreateCube(
+            "ChestRightPlate",
+            parent,
+            new Vector3(0.22f, 0.58f, 0.39f),
+            new Vector3(0.3f, 0.2f, 0.07f),
+            new Color(0.17f, 0.21f, 0.28f));
+
+        CreateCube(
+            "LeftElbowGuard",
+            parent,
+            new Vector3(-0.63f, 0.07f, 0.16f),
+            new Vector3(0.18f, 0.16f, 0.2f),
+            new Color(0.1f, 0.13f, 0.18f));
+
+        CreateCube(
+            "RightElbowGuard",
+            parent,
+            new Vector3(0.63f, 0.07f, 0.16f),
+            new Vector3(0.18f, 0.16f, 0.2f),
+            new Color(0.1f, 0.13f, 0.18f));
+
+        CreateCube(
+            "LeftKneeGuard",
+            parent,
+            new Vector3(-0.3f, -1.16f, 0.19f),
+            new Vector3(0.23f, 0.18f, 0.1f),
+            new Color(0.2f, 0.24f, 0.31f));
+
+        CreateCube(
+            "RightKneeGuard",
+            parent,
+            new Vector3(0.3f, -1.16f, 0.19f),
+            new Vector3(0.23f, 0.18f, 0.1f),
+            new Color(0.2f, 0.24f, 0.31f));
+
+        CreateCube(
+            "LeftBootStripe",
+            parent,
+            new Vector3(-0.3f, -1.77f, 0.44f),
+            new Vector3(0.08f, 0.08f, 0.12f),
+            new Color(0.08f, 0.65f, 0.82f));
+
+        CreateCube(
+            "RightBootStripe",
+            parent,
+            new Vector3(0.3f, -1.77f, 0.44f),
+            new Vector3(0.08f, 0.08f, 0.12f),
+            new Color(0.08f, 0.65f, 0.82f));
     }
 
     private void CreateArmArmor(Transform parent)
@@ -451,10 +525,28 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
                 "No compatible Unity material shader was found.");
         }
 
-        renderer.material =
-            new Material(shader)
-            {
-                color = color
-            };
+        Material material = new Material(shader)
+        {
+            color = color
+        };
+
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0.58f);
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", 0.68f);
+        }
+
+        if (color.g > 0.55f && color.b > 0.55f
+            && material.HasProperty("_EmissionColor"))
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", color * 1.7f);
+        }
+
+        renderer.material = material;
     }
 }
