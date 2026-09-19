@@ -287,40 +287,98 @@ public sealed class PlayerCombatController : MonoBehaviour
     private void CreateWeaponVisual()
     {
         weaponVisual =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube);
+            new GameObject("EnergyBladeWeapon");
 
-        weaponVisual.name =
-            "PrototypeEnergyBlade";
+        if (weaponVisual == null)
+        {
+            throw new System.InvalidOperationException(
+                "Failed to create the energy blade weapon root.");
+        }
 
         weaponVisual.transform.SetParent(
             transform,
             false);
 
         weaponVisual.transform.localPosition =
-            new Vector3(0f, 1.05f, 0.85f);
-
-        weaponVisual.transform.localScale =
             new Vector3(
-                0.11f,
-                0.12f,
-                1.55f);
+                0.58f,
+                -0.02f,
+                0.28f);
 
-        Collider collider =
-            weaponVisual.GetComponent<Collider>();
+        weaponVisual.transform.localRotation =
+            Quaternion.Euler(
+                0f,
+                -22f,
+                15f);
 
-        if (collider != null)
-        {
-            Destroy(collider);
-        }
+        GameObject blade =
+            GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
 
-        Renderer renderer =
-            weaponVisual.GetComponent<Renderer>();
-
-        if (renderer == null)
+        if (blade == null)
         {
             throw new System.InvalidOperationException(
-                "Failed to create the prototype weapon renderer.");
+                "Failed to create the energy blade.");
+        }
+
+        blade.name = "EnergyBlade";
+        blade.transform.SetParent(
+            weaponVisual.transform,
+            false);
+
+        blade.transform.localPosition =
+            new Vector3(
+                0f,
+                0f,
+                0.82f);
+
+        blade.transform.localScale =
+            new Vector3(
+                0.1f,
+                0.08f,
+                1.55f);
+
+        Collider bladeCollider =
+            blade.GetComponent<Collider>();
+
+        if (bladeCollider != null)
+        {
+            Destroy(bladeCollider);
+        }
+
+        GameObject guard =
+            GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
+
+        if (guard == null)
+        {
+            throw new System.InvalidOperationException(
+                "Failed to create the energy blade guard.");
+        }
+
+        guard.name = "EnergyBladeGuard";
+        guard.transform.SetParent(
+            weaponVisual.transform,
+            false);
+
+        guard.transform.localPosition =
+            new Vector3(
+                0f,
+                0f,
+                0.08f);
+
+        guard.transform.localScale =
+            new Vector3(
+                0.34f,
+                0.06f,
+                0.09f);
+
+        Collider guardCollider =
+            guard.GetComponent<Collider>();
+
+        if (guardCollider != null)
+        {
+            Destroy(guardCollider);
         }
 
         Shader shader =
@@ -339,15 +397,60 @@ public sealed class PlayerCombatController : MonoBehaviour
             {
                 color =
                     new Color(
-                        0.2f,
-                        0.95f,
+                        0.18f,
+                        0.92f,
                         1f)
             };
 
-        renderer.material =
+        Renderer bladeRenderer =
+            blade.GetComponent<Renderer>();
+
+        if (bladeRenderer == null)
+        {
+            throw new System.InvalidOperationException(
+                "Energy blade renderer was not created.");
+        }
+
+        bladeRenderer.material =
             weaponMaterial;
 
+        ApplyWeaponMaterial(
+            guard,
+            new Color(
+                0.72f,
+                0.55f,
+                0.18f));
+
         weaponVisual.SetActive(false);
+    }
+
+    private static void ApplyWeaponMaterial(
+        GameObject target,
+        Color color)
+    {
+        Renderer renderer =
+            target.GetComponent<Renderer>();
+
+        if (renderer == null)
+        {
+            return;
+        }
+
+        Shader shader =
+            Shader.Find(
+                "Universal Render Pipeline/Lit")
+            ?? Shader.Find("Standard");
+
+        if (shader == null)
+        {
+            return;
+        }
+
+        renderer.material =
+            new Material(shader)
+            {
+                color = color
+            };
     }
 
     private void AnimateWeapon(float normalizedTime)
@@ -359,26 +462,26 @@ public sealed class PlayerCombatController : MonoBehaviour
 
         float angle =
             Mathf.Lerp(
-                -75f,
-                75f,
+                -72f,
+                92f,
                 normalizedTime);
 
         float lift =
             Mathf.Sin(
                 normalizedTime * Mathf.PI)
-            * 0.12f;
+            * 0.08f;
 
         weaponVisual.transform.localPosition =
             new Vector3(
-                0f,
-                1.05f + lift,
-                0.85f);
+                0.58f,
+                -0.02f + lift,
+                0.28f);
 
         weaponVisual.transform.localRotation =
             Quaternion.Euler(
-                15f,
+                -8f,
                 angle,
-                35f - angle * 0.45f);
+                12f);
     }
 
     private void OnDestroy()
