@@ -89,21 +89,23 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
     {
         Vector2 gamepadLook = input.Look.ReadValue<Vector2>();
         Vector2 mouseLook = input.MouseLook.ReadValue<Vector2>();
-        Vector2 activeLook = gamepadLook.sqrMagnitude > 0.0001f
-            ? gamepadLook
-            : mouseLook;
 
-        if (activeLook.sqrMagnitude > 0.0001f)
+        if (gamepadLook.sqrMagnitude > 0.0001f)
         {
-            float sensitivity = gamepadLook.sqrMagnitude > 0.0001f
-                ? lookSensitivity
-                : mouseSensitivity;
-
-            yaw += activeLook.x * sensitivity * Time.deltaTime;
-            pitch -= activeLook.y * sensitivity * 0.55f * Time.deltaTime;
+            yaw += gamepadLook.x * lookSensitivity * Time.deltaTime;
+            pitch -= gamepadLook.y * lookSensitivity * 0.55f * Time.deltaTime;
+        }
+        else if (mouseLook.sqrMagnitude > 0.0001f)
+        {
+            yaw += mouseLook.x * mouseSensitivity;
+            pitch -= mouseLook.y * mouseSensitivity * 0.55f;
         }
 
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+        Vector2 activeLook = gamepadLook.sqrMagnitude > 0.0001f
+            ? gamepadLook
+            : mouseLook;
 
         Transform lockTarget = targetingSystem.CurrentTarget;
         if (lockTarget != null && activeLook.sqrMagnitude < 0.01f)
