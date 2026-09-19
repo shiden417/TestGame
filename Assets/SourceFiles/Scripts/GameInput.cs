@@ -1,6 +1,5 @@
-using UnityEngine.InputSystem;
-
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [DisallowMultipleComponent]
 public sealed class GameInput : MonoBehaviour
