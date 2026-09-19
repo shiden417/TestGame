@@ -15,18 +15,18 @@ public sealed class StageDirector : MonoBehaviour
         Defeat
     }
 
-    [SerializeField] private float firstWaveDelay = 1f;
+    [SerializeField] private float firstWaveDelay = 1.2f;
 
     private StageState state;
     private BattleDirector battleDirector;
     private Transform player;
+    private PlayerHealth playerHealth;
     private GameFlowController gameFlow;
+
     private int waveNumber;
-    private int currentWaveRemaining;
 
     public string CurrentPhaseLabel { get; private set; } = "MISSION START";
     public int WaveNumber => waveNumber;
-    public int CurrentWaveRemaining => currentWaveRemaining;
     public bool IsCleared => state == StageState.Clear;
     public bool IsDefeated => state == StageState.Defeat;
 
@@ -52,6 +52,14 @@ public sealed class StageDirector : MonoBehaviour
 
         battleDirector = battle;
         player = playerTransform;
+        playerHealth = player.GetComponent<PlayerHealth>();
+
+        if (playerHealth == null)
+        {
+            throw new System.InvalidOperationException(
+                "StageDirector requires PlayerHealth on the player.");
+        }
+
         gameFlow = flow;
         state = StageState.Intro;
         StartCoroutine(RunStage());
@@ -59,187 +67,214 @@ public sealed class StageDirector : MonoBehaviour
 
     private IEnumerator RunStage()
     {
-        CurrentPhaseLabel = "MISSION START";
+        CurrentPhaseLabel = "MISSION START // FUTURE ASHES";
         yield return new WaitForSeconds(firstWaveDelay);
+
+        if (!playerHealth.IsAlive)
+        {
+            HandleDefeat();
+            yield break;
+        }
 
         state = StageState.Wave1;
         waveNumber = 1;
-        CurrentPhaseLabel = "WAVE 1 // URBAN PATROL";
-        yield return StartCoroutine(RunWave(12, false));
+        CurrentPhaseLabel = "WAVE 1 // PURGE SECTOR";
+        yield return StartCoroutine(RunWave(18, false));
+
+        if (state == StageState.Defeat)
+        {
+            yield break;
+        }
 
         state = StageState.Wave2;
         waveNumber = 2;
         CurrentPhaseLabel = "WAVE 2 // REINFORCEMENT";
-        yield return StartCoroutine(RunWave(18, true));
+        yield return StartCoroutine(RunWave(24, true));
+
+        if (state == StageState.Defeat)
+        {
+            yield break;
+        }
 
         state = StageState.Elite;
-        CurrentPhaseLabel = "ELITE UNIT DETECTED";
-        SpawnEnemy(EnemyController.EnemyType.Elite, new Vector3(0f, 1f, 13f));
-        yield return new WaitUntil(() => !battleDirector.HasLivingBoss() && FindLivingEliteCount() == 0 && battleDirector.ActiveEnemyCount == 0);
+        CurrentPhaseLabel = "ELITE SIGNATURE // KAGE FRAME";
+        SpawnEnemy(
+            EnemyController.EnemyType.Elite,
+            player.position + new Vector3(0f, 1f, 14f),
+            1);
+
+        yield return StartCoroutine(WaitForBattlefieldClear());
+
+        if (state == StageState.Defeat)
+        {
+            yield break;
+        }
 
         state = StageState.Boss;
         CurrentPhaseLabel = "BOSS // OROCHI FRAME";
-        SpawnBoss(new Vector3(0f, 1.5f, 16f));
-        yield return new WaitUntil(() => !battleDirector.HasLivingBoss());
+        SpawnEnemy(
+            EnemyController.EnemyType.Boss,
+            player.position + new Vector3(0f, 1.5f, 16f),
+            2.4f);
+
+        yield return StartCoroutine(WaitForBattlefieldClear());
+
+        if (state == StageState.Defeat)
+        {
+            yield break;
+        }
 
         state = StageState.Clear;
         CurrentPhaseLabel = "MISSION CLEAR";
         gameFlow.CompleteStage(battleDirector.TotalDefeated);
     }
 
-    private IEnumerator RunWave(int count, bool includeHeavy)
+    private IEnumerator RunWave(int count, bool includeSpecialEnemies)
     {
-        currentWaveRemaining = count;
-
         for (int i = 0; i < count; i++)
         {
+            if (!playerHealth.IsAlive)
+            {
+                HandleDefeat();
+                yield break;
+            }
+
             EnemyController.EnemyType type = EnemyController.EnemyType.Basic;
 
-            if (includeHeavy && i % 5 == 0)
+            if (includeSpecialEnemies && i % 6 == 0)
             {
                 type = EnemyController.EnemyType.Heavy;
             }
-            else if (i % 7 == 0)
+            else if (i % 8 == 0)
             {
                 type = EnemyController.EnemyType.Ranged;
             }
 
-            SpawnEnemy(type, GetSpawnPosition(i));
-            currentWaveRemaining--;
-            yield return new WaitForSeconds(0.18f);
+            SpawnEnemy(type, GetSpawnPosition(i), 1f);
+            yield return new WaitForSeconds(0.12f);
         }
 
-        yield return new WaitUntil(() => battleDirector.ActiveEnemyCount == 0);
+        yield return StartCoroutine(WaitForBattlefieldClear());
+    }
+
+    private IEnumerator WaitForBattlefieldClear()
+    {
+        while (battleDirector.ActiveEnemyCount > 0)
+        {
+            if (!playerHealth.IsAlive)
+            {
+                HandleDefeat();
+                yield break;
+            }
+
+            yield return null;
+        }
     }
 
     private Vector3 GetSpawnPosition(int index)
     {
         float angle = index * 137.5f * Mathf.Deg2Rad;
-        float radius = 10f + (index % 5) * 1.2f;
+        float radius = 11f + (index % 5) * 1.2f;
+
         return player.position + new Vector3(
             Mathf.Cos(angle) * radius,
             1f,
             Mathf.Sin(angle) * radius);
     }
 
-    private void SpawnEnemy(EnemyController.EnemyType type, Vector3 position)
+    private void SpawnEnemy(
+        EnemyController.EnemyType type,
+        Vector3 position,
+        float scaleMultiplier)
     {
         GameObject enemyObject = CreateEnemyVisual(type);
         enemyObject.transform.position = position;
+        enemyObject.transform.localScale *= scaleMultiplier;
 
         EnemyController enemy = enemyObject.AddComponent<EnemyController>();
-        enemy.Initialize(
-            type,
-            player,
-            type switch
-            {
-                EnemyController.EnemyType.Basic => 60f,
-                EnemyController.EnemyType.Heavy => 100f,
-                EnemyController.EnemyType.Ranged => 55f,
-                EnemyController.EnemyType.Elite => 260f,
-                _ => 100f
-            },
-            type switch
-            {
-                EnemyController.EnemyType.Basic => 2.8f,
-                EnemyController.EnemyType.Heavy => 2f,
-                EnemyController.EnemyType.Ranged => 2.2f,
-                EnemyController.EnemyType.Elite => 3f,
-                _ => 2f
-            },
-            type switch
-            {
-                EnemyController.EnemyType.Basic => 8f,
-                EnemyController.EnemyType.Heavy => 14f,
-                EnemyController.EnemyType.Ranged => 7f,
-                EnemyController.EnemyType.Elite => 19f,
-                _ => 10f
-            },
-            type switch
-            {
-                EnemyController.EnemyType.Basic => 1.8f,
-                EnemyController.EnemyType.Heavy => 2.6f,
-                EnemyController.EnemyType.Ranged => 2.2f,
-                EnemyController.EnemyType.Elite => 1.5f,
-                _ => 2f
-            });
+
+        switch (type)
+        {
+            case EnemyController.EnemyType.Basic:
+                enemy.Initialize(type, player, battleDirector, 60f, 3f, 8f, 1.7f);
+                break;
+
+            case EnemyController.EnemyType.Heavy:
+                enemy.Initialize(type, player, battleDirector, 105f, 2f, 14f, 2.4f);
+                break;
+
+            case EnemyController.EnemyType.Ranged:
+                enemy.Initialize(type, player, battleDirector, 55f, 2.4f, 7f, 2f);
+                break;
+
+            case EnemyController.EnemyType.Elite:
+                enemy.Initialize(type, player, battleDirector, 260f, 3.1f, 19f, 1.45f);
+                break;
+
+            case EnemyController.EnemyType.Boss:
+                enemy.Initialize(type, player, battleDirector, 1200f, 2.35f, 24f, 1.2f);
+                break;
+        }
 
         enemyObject.AddComponent<Targetable>();
         battleDirector.Register(enemy);
     }
 
-    private void SpawnBoss(Vector3 position)
-    {
-        GameObject bossObject = CreateEnemyVisual(EnemyController.EnemyType.Boss);
-        bossObject.transform.position = position;
-        bossObject.transform.localScale *= 2.3f;
-
-        EnemyController enemy = bossObject.AddComponent<EnemyController>();
-        enemy.Initialize(
-            EnemyController.EnemyType.Boss,
-            player,
-            1100f,
-            2.3f,
-            24f,
-            1.35f);
-
-        bossObject.AddComponent<Targetable>();
-        battleDirector.Register(enemy);
-    }
-
     private GameObject CreateEnemyVisual(EnemyController.EnemyType type)
     {
-        PrimitiveType primitive = type == EnemyController.EnemyType.Boss
-            ? PrimitiveType.Sphere
-            : PrimitiveType.Capsule;
+        PrimitiveType primitive =
+            type == EnemyController.EnemyType.Boss
+                ? PrimitiveType.Sphere
+                : PrimitiveType.Capsule;
 
-        GameObject enemy = GameObject.CreatePrimitive(primitive);
-        enemy.name = $"{type}Unit";
+        GameObject enemyObject = GameObject.CreatePrimitive(primitive);
+        enemyObject.name = $"{type}Unit";
 
         Color color = type switch
         {
-            EnemyController.EnemyType.Basic => new Color(0.65f, 0.08f, 0.12f),
-            EnemyController.EnemyType.Heavy => new Color(0.38f, 0.08f, 0.12f),
-            EnemyController.EnemyType.Ranged => new Color(0.85f, 0.25f, 0.1f),
-            EnemyController.EnemyType.Elite => new Color(0.65f, 0.1f, 0.75f),
-            EnemyController.EnemyType.Boss => new Color(0.95f, 0.45f, 0.08f),
+            EnemyController.EnemyType.Basic => new Color(0.62f, 0.06f, 0.12f),
+            EnemyController.EnemyType.Heavy => new Color(0.3f, 0.04f, 0.08f),
+            EnemyController.EnemyType.Ranged => new Color(0.95f, 0.22f, 0.08f),
+            EnemyController.EnemyType.Elite => new Color(0.68f, 0.12f, 0.85f),
+            EnemyController.EnemyType.Boss => new Color(0.95f, 0.48f, 0.05f),
             _ => Color.red
         };
 
-        Renderer renderer = enemy.GetComponent<Renderer>();
+        Renderer renderer = enemyObject.GetComponent<Renderer>();
         if (renderer != null)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit")
+                ?? Shader.Find("Standard");
+
             if (shader != null)
             {
-                renderer.material = new Material(shader) { color = color };
+                renderer.material = new Material(shader)
+                {
+                    color = color
+                };
             }
         }
 
-        return enemy;
-    }
-
-    private int FindLivingEliteCount()
-    {
-        EnemyController[] enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
-        int count = 0;
-
-        foreach (EnemyController enemy in enemies)
-        {
-            if (enemy != null && enemy.IsAlive && enemy.IsElite && !enemy.IsBoss)
-            {
-                count++;
-            }
-        }
-
-        return count;
+        return enemyObject;
     }
 
     public void NotifyEnemyDefeated(EnemyController enemy)
     {
-        if (enemy != null && currentWaveRemaining > 0)
+        if (state == StageState.Clear || state == StageState.Defeat)
         {
-            currentWaveRemaining = Mathf.Max(0, currentWaveRemaining - 1);
+            return;
         }
+    }
+
+    private void HandleDefeat()
+    {
+        if (state == StageState.Defeat || state == StageState.Clear)
+        {
+            return;
+        }
+
+        state = StageState.Defeat;
+        CurrentPhaseLabel = "MISSION FAILED";
+        gameFlow.DefeatStage();
     }
 }
