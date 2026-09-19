@@ -14,6 +14,7 @@ public sealed class GameBootstrap : MonoBehaviour
     private PlayerSkillController skillController;
     private TargetingSystem targetingSystem;
     private ThirdPersonCameraController cameraController;
+    private PlayerMotionVisuals playerMotionVisuals;
 
     private GameFlowController gameFlowController;
     private BattleDirector battleDirector;
@@ -133,6 +134,15 @@ public sealed class GameBootstrap : MonoBehaviour
 
         CreatePlayerAppearance(playerObject);
 
+        playerMotionVisuals =
+            playerObject.AddComponent<PlayerMotionVisuals>();
+
+        if (playerMotionVisuals == null)
+        {
+            throw new System.InvalidOperationException(
+                "PlayerMotionVisuals could not be created.");
+        }
+
         player =
             playerObject.transform;
     }
@@ -226,7 +236,8 @@ public sealed class GameBootstrap : MonoBehaviour
             || perfectDodgeSystem == null
             || combatController == null
             || skillController == null
-            || playerController == null)
+            || playerController == null
+            || playerMotionVisuals == null)
         {
             throw new System.InvalidOperationException(
                 "One or more player systems could not be initialized.");
@@ -268,6 +279,11 @@ public sealed class GameBootstrap : MonoBehaviour
             cameraController,
             targetingSystem,
             dodgeController);
+
+        playerMotionVisuals.Initialize(
+            playerController,
+            dodgeController,
+            combatController);
 
         battleDirector.Initialize(
             player,
