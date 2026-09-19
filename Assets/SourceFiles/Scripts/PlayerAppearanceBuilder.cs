@@ -33,7 +33,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
 
         visualRoot.localPosition = Vector3.zero;
         visualRoot.localRotation = Quaternion.identity;
-        visualRoot.localScale = Vector3.one;
+        visualRoot.localScale = new Vector3(1f, 0.58f, 1f);
 
         CreateCoreBody(visualRoot);
         CreateHead(visualRoot);
