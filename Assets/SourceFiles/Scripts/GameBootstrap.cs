@@ -1,91 +1,80 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
+[DisallowMultipleComponent]
 public sealed class GameBootstrap : MonoBehaviour
 {
-    private readonly List<GameObject> targets = new();
-
-    private GameInput gameInput;
     private Transform player;
-    private ThirdPersonCameraController cameraController;
-    private TargetingSystem targetingSystem;
-    private PlayerCombatController combatController;
+    private GameInput gameInput;
+    private PlayerController playerController;
     private DodgeController dodgeController;
-    private Text statusText;
+    private PlayerHealth playerHealth;
+    private PerfectDodgeSystem perfectDodgeSystem;
+    private PlayerCombatController combatController;
+    private PlayerSkillController skillController;
+    private TargetingSystem targetingSystem;
+    private ThirdPersonCameraController cameraController;
+
+    private GameFlowController gameFlowController;
+    private BattleDirector battleDirector;
+    private StageDirector stageDirector;
+    private GameHudController hudController;
 
     private void Start()
     {
+        Application.targetFrameRate = 120;
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = 0.02f;
+
+        CreateCoreSystems();
         CreateWorld();
         CreatePlayer();
         CreateCamera();
-        CreateTargets();
+        WirePlayerSystems();
+        CreatePresentation();
         CreateHud();
     }
 
-    private void Update()
+    private void CreateCoreSystems()
     {
-        CleanupTargets();
-        UpdateHud();
+        gameFlowController = CreateComponent<GameFlowController>("GameFlow");
+        battleDirector = CreateComponent<BattleDirector>("BattleDirector");
+        stageDirector = CreateComponent<StageDirector>("StageDirector");
     }
 
     private void CreateWorld()
     {
-        GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        ground.name = "FuturisticArena";
-        ground.transform.localScale = new Vector3(2.75f, 1f, 2.75f);
-        ApplyMaterial(ground, new Color(0.035f, 0.055f, 0.075f));
+        WorldPresentationBuilder builder =
+            CreateComponent<WorldPresentationBuilder>("WorldPresentation");
 
-        CreateBoundary(new Vector3(0f, 1.25f, 27.5f), new Vector3(55f, 2.5f, 1f));
-        CreateBoundary(new Vector3(0f, 1.25f, -27.5f), new Vector3(55f, 2.5f, 1f));
-        CreateBoundary(new Vector3(27.5f, 1.25f, 0f), new Vector3(1f, 2.5f, 55f));
-        CreateBoundary(new Vector3(-27.5f, 1.25f, 0f), new Vector3(1f, 2.5f, 55f));
-
-        Vector3[] pillarPositions =
-        {
-            new(-14f, 3f, 12f),
-            new(14f, 3f, 12f),
-            new(-14f, 3f, -12f),
-            new(14f, 3f, -12f)
-        };
-
-        foreach (Vector3 position in pillarPositions)
-        {
-            GameObject pillar = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            pillar.name = "RuinedFuturePillar";
-            pillar.transform.position = position;
-            pillar.transform.localScale = new Vector3(1.6f, 6f, 1.6f);
-            ApplyMaterial(pillar, new Color(0.08f, 0.11f, 0.15f));
-        }
-
-        GameObject lightObject = new GameObject("Directional Light");
-        Light light = lightObject.AddComponent<Light>();
-        light.type = LightType.Directional;
-        light.intensity = 1.15f;
-        light.color = new Color(0.82f, 0.9f, 1f);
-        lightObject.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
-
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.06f, 0.08f, 0.12f);
-        RenderSettings.fog = true;
-        RenderSettings.fogColor = new Color(0.025f, 0.04f, 0.065f);
-        RenderSettings.fogDensity = 0.012f;
+        builder.Build();
     }
 
     private void CreatePlayer()
     {
-        GameObject playerObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        playerObject.name = "Player";
-        playerObject.transform.position = new Vector3(0f, 1.1f, 0f);
-        ApplyMaterial(playerObject, new Color(0.12f, 0.52f, 0.8f));
+        GameObject playerObject =
+            GameObject.CreatePrimitive(PrimitiveType.Capsule);
 
-        Collider primitiveCollider = playerObject.GetComponent<Collider>();
+        playerObject.name = "Player";
+        playerObject.transform.position =
+            new Vector3(0f, 1.1f, -9f);
+        playerObject.transform.localScale =
+            Vector3.one;
+
+        ApplyMaterial(
+            playerObject,
+            new Color(0.08f, 0.34f, 0.55f));
+
+        Collider primitiveCollider =
+            playerObject.GetComponent<Collider>();
+
         if (primitiveCollider != null)
         {
             Destroy(primitiveCollider);
         }
 
-        CharacterController characterController = playerObject.AddComponent<CharacterController>();
+        CharacterController characterController =
+            playerObject.AddComponent<CharacterController>();
+
         characterController.height = 2f;
         characterController.radius = 0.48f;
         characterController.center = Vector3.zero;
@@ -95,199 +84,231 @@ public sealed class GameBootstrap : MonoBehaviour
         gameInput = playerObject.AddComponent<GameInput>();
         targetingSystem = playerObject.AddComponent<TargetingSystem>();
         dodgeController = playerObject.AddComponent<DodgeController>();
-        combatController = playerObject.AddComponent<PlayerCombatController>();
-        PlayerController playerController = playerObject.AddComponent<PlayerController>();
+        playerHealth = playerObject.AddComponent<PlayerHealth>();
+        perfectDodgeSystem =
+            playerObject.AddComponent<PerfectDodgeSystem>();
+        combatController =
+            playerObject.AddComponent<PlayerCombatController>();
+        skillController =
+            playerObject.AddComponent<PlayerSkillController>();
+        playerController =
+            playerObject.AddComponent<PlayerController>();
+
+        CreatePlayerArmor(playerObject);
 
         player = playerObject.transform;
+    }
+
+    private void CreatePlayerArmor(GameObject playerObject)
+    {
+        CreatePlayerPart(
+            "ArmorCore",
+            playerObject.transform,
+            new Vector3(0f, 0.15f, 0f),
+            new Vector3(0.9f, 0.95f, 0.7f),
+            new Color(0.12f, 0.16f, 0.22f));
+
+        CreatePlayerPart(
+            "LeftShoulder",
+            playerObject.transform,
+            new Vector3(-0.58f, 0.45f, 0f),
+            new Vector3(0.28f, 0.45f, 0.5f),
+            new Color(0.55f, 0.1f, 0.2f));
+
+        CreatePlayerPart(
+            "RightShoulder",
+            playerObject.transform,
+            new Vector3(0.58f, 0.45f, 0f),
+            new Vector3(0.28f, 0.45f, 0.5f),
+            new Color(0.55f, 0.1f, 0.2f));
+
+        CreatePlayerPart(
+            "BackEmitter",
+            playerObject.transform,
+            new Vector3(0f, 0.15f, -0.55f),
+            new Vector3(0.45f, 0.75f, 0.18f),
+            new Color(0.06f, 0.75f, 1f));
+    }
+
+    private static void CreatePlayerPart(
+        string objectName,
+        Transform parent,
+        Vector3 localPosition,
+        Vector3 localScale,
+        Color color)
+    {
+        GameObject part =
+            GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+        part.name = objectName;
+        part.transform.SetParent(parent, false);
+        part.transform.localPosition = localPosition;
+        part.transform.localScale = localScale;
+
+        Collider collider = part.GetComponent<Collider>();
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
+
+        ApplyMaterial(part, color);
     }
 
     private void CreateCamera()
     {
         GameObject cameraObject = new GameObject("Main Camera");
+
         Camera camera = cameraObject.AddComponent<Camera>();
         cameraObject.tag = "MainCamera";
-        camera.fieldOfView = 62f;
+        camera.fieldOfView = 64f;
         camera.nearClipPlane = 0.05f;
-        camera.farClipPlane = 200f;
+        camera.farClipPlane = 240f;
 
-        cameraController = cameraObject.AddComponent<ThirdPersonCameraController>();
-        targetingSystem.Initialize(gameInput, cameraController);
-        cameraController.Initialize(player, gameInput, targetingSystem);
+        cameraController =
+            cameraObject.AddComponent<ThirdPersonCameraController>();
 
-        dodgeController.Initialize(player.GetComponent<CharacterController>(), gameInput, cameraController);
-        combatController.Initialize(gameInput, targetingSystem, dodgeController);
+        cameraObject.transform.position =
+            new Vector3(0f, 5.8f, -16f);
+    }
 
-        PlayerController playerController = player.GetComponent<PlayerController>();
+    private void WirePlayerSystems()
+    {
+        CharacterController characterController =
+            player.GetComponent<CharacterController>();
+
+        if (characterController == null)
+        {
+            throw new System.InvalidOperationException(
+                "Player CharacterController was not created.");
+        }
+
+        if (cameraController == null
+            || gameInput == null
+            || targetingSystem == null
+            || dodgeController == null
+            || playerHealth == null
+            || perfectDodgeSystem == null
+            || combatController == null
+            || skillController == null
+            || playerController == null)
+        {
+            throw new System.InvalidOperationException(
+                "One or more player systems could not be initialized.");
+        }
+
+        targetingSystem.Initialize(
+            gameInput,
+            cameraController);
+
+        cameraController.Initialize(
+            player,
+            gameInput,
+            targetingSystem);
+
+        dodgeController.Initialize(
+            characterController,
+            gameInput,
+            cameraController);
+
+        playerHealth.Initialize(
+            dodgeController);
+
+        perfectDodgeSystem.Initialize(
+            dodgeController);
+
+        combatController.Initialize(
+            gameInput,
+            targetingSystem,
+            dodgeController,
+            perfectDodgeSystem);
+
+        skillController.Initialize(
+            gameInput,
+            targetingSystem,
+            perfectDodgeSystem);
+
         playerController.Initialize(
             gameInput,
             cameraController,
             targetingSystem,
             dodgeController);
+
+        battleDirector.Initialize(
+            player,
+            stageDirector);
+
+        stageDirector.Initialize(
+            battleDirector,
+            player,
+            gameFlowController);
     }
 
-    private void CreateTargets()
+    private void CreatePresentation()
     {
-        Vector3[] positions =
-        {
-            new(-6f, 1f, 7f),
-            new(0f, 1f, 9f),
-            new(6f, 1f, 7f),
-            new(-8f, 1f, 0f),
-            new(8f, 1f, 0f),
-            new(-5f, 1f, -8f),
-            new(5f, 1f, -8f),
-            new(0f, 1f, -11f)
-        };
-
-        for (int i = 0; i < positions.Length; i++)
-        {
-            GameObject targetObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            targetObject.name = $"TrainingUnit_{i + 1:00}";
-            targetObject.transform.position = positions[i];
-            targetObject.transform.localScale = new Vector3(1.15f, 2f, 1.15f);
-            ApplyMaterial(targetObject, new Color(0.45f, 0.08f, 0.12f));
-
-            targetObject.AddComponent<Targetable>();
-            targetObject.AddComponent<CombatTarget>();
-
-            targets.Add(targetObject);
-        }
+        // Presentation is built by WorldPresentationBuilder.
+        // This method intentionally keeps the bootstrap responsibility explicit.
     }
 
     private void CreateHud()
     {
-        GameObject canvasObject = new GameObject("HUD");
-        Canvas canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        GameObject hudObject =
+            new GameObject("GameHUD");
 
-        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        hudController =
+            hudObject.AddComponent<GameHudController>();
 
-        canvasObject.AddComponent<GraphicRaycaster>();
-
-        statusText = CreateText(
-            canvasObject.transform,
-            "Status",
-            new Vector2(36f, -30f),
-            new Vector2(720f, 180f),
-            27);
-
-        statusText.text =
-            "Phase 1 Prototype\n" +
-            "左スティック: 移動    右スティック: カメラ\n" +
-            "RT/R2: 通常攻撃    RB/R1: 回避    A/×: ジャンプ    LT/L2: ロックオン";
+        hudController.Initialize(
+            gameFlowController,
+            stageDirector,
+            battleDirector,
+            playerHealth,
+            skillController,
+            perfectDodgeSystem);
     }
 
-    private Text CreateText(
-        Transform parent,
-        string objectName,
-        Vector2 anchoredPosition,
-        Vector2 size,
-        int fontSize)
+    private static T CreateComponent<T>(string objectName)
+        where T : Component
     {
-        GameObject textObject = new GameObject(objectName);
-        textObject.transform.SetParent(parent, false);
+        GameObject gameObject =
+            new GameObject(objectName);
 
-        Text text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = fontSize;
-        text.alignment = TextAnchor.UpperLeft;
-        text.color = Color.white;
+        T component = gameObject.AddComponent<T>();
 
-        RectTransform rect = text.rectTransform;
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
-        rect.anchoredPosition = anchoredPosition;
-        rect.sizeDelta = size;
-
-        return text;
-    }
-
-    private void CleanupTargets()
-    {
-        for (int i = targets.Count - 1; i >= 0; i--)
+        if (component == null)
         {
-            GameObject target = targets[i];
-            if (target == null || !target.activeSelf)
-            {
-                if (target != null)
-                {
-                    Destroy(target);
-                }
-
-                targets.RemoveAt(i);
-            }
-        }
-    }
-
-    private void UpdateHud()
-    {
-        if (statusText == null)
-        {
-            return;
+            throw new System.InvalidOperationException(
+                $"Failed to create component: {typeof(T).Name}");
         }
 
-        Targetable target = targetingSystem != null
-            ? targetingSystem.CurrentTargetable
-            : null;
-
-        int activeTargets = 0;
-        foreach (GameObject targetObject in targets)
-        {
-            if (targetObject != null && targetObject.activeSelf)
-            {
-                activeTargets++;
-            }
-        }
-
-        string targetStatus = target != null
-            ? $"LOCK-ON: {target.DisplayName}"
-            : "LOCK-ON: OFF";
-
-        int comboStep = combatController != null ? combatController.ComboStep : 0;
-        string attackStatus = combatController != null && combatController.IsAttacking
-            ? $"ATTACK COMBO {comboStep}"
-            : "READY";
-
-        statusText.text =
-            "PHASE 1 // FUTURE ACTION PROTOTYPE\n" +
-            "左スティック: 移動    右スティック: カメラ\n" +
-            "RT/R2: 攻撃    RB/R1: 回避    A/×: ジャンプ    LT/L2: ロックオン    R3: ターゲット切替\n" +
-            $"{targetStatus}    {attackStatus}    Training Units: {activeTargets}";
+        return component;
     }
 
-    private void CreateBoundary(Vector3 position, Vector3 scale)
+    private static void ApplyMaterial(
+        GameObject target,
+        Color color)
     {
-        GameObject boundary = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        boundary.name = "ArenaBoundary";
-        boundary.transform.position = position;
-        boundary.transform.localScale = scale;
-        ApplyMaterial(boundary, new Color(0.02f, 0.03f, 0.05f));
-    }
+        Renderer renderer =
+            target.GetComponent<Renderer>();
 
-    private static void ApplyMaterial(GameObject target, Color color)
-    {
-        Renderer renderer = target.GetComponent<Renderer>();
         if (renderer == null)
         {
             return;
         }
 
-        Shader shader = Shader.Find("Universal Render Pipeline/Lit")
+        Shader shader =
+            Shader.Find("Universal Render Pipeline/Lit")
             ?? Shader.Find("Standard");
 
         if (shader == null)
         {
-            throw new System.InvalidOperationException("No compatible Unity material shader was found.");
+            throw new System.InvalidOperationException(
+                "No compatible Unity material shader was found.");
         }
 
-        Material material = new Material(shader)
-        {
-            color = color
-        };
-
-        renderer.material = material;
+        renderer.material =
+            new Material(shader)
+            {
+                color = color
+            };
     }
 }
