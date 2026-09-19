@@ -12,10 +12,12 @@ public sealed class DodgeController : MonoBehaviour
     private ThirdPersonCameraController cameraController;
     private float cooldownTimer;
     private float remainingTime;
+    private float elapsedTime;
     private Vector3 dodgeDirection;
 
     public bool IsDodging { get; private set; }
     public bool IsInvulnerable => IsDodging;
+    public float DodgeElapsedTime => elapsedTime;
 
     public void Initialize(
         CharacterController controller,
@@ -51,7 +53,7 @@ public sealed class DodgeController : MonoBehaviour
 
         if (cooldownTimer > 0f)
         {
-            cooldownTimer -= Time.deltaTime;
+            cooldownTimer = Mathf.Max(0f, cooldownTimer - Time.deltaTime);
         }
 
         if (IsDodging)
@@ -80,9 +82,12 @@ public sealed class DodgeController : MonoBehaviour
         }
 
         direction.y = 0f;
-        dodgeDirection = direction.normalized;
+        dodgeDirection = direction.sqrMagnitude > 0.01f
+            ? direction.normalized
+            : -transform.forward;
 
         remainingTime = dodgeDuration;
+        elapsedTime = 0f;
         IsDodging = true;
         cooldownTimer = dodgeCooldown;
     }
@@ -91,17 +96,25 @@ public sealed class DodgeController : MonoBehaviour
     {
         if (remainingTime <= 0f)
         {
-            IsDodging = false;
+            FinishDodge();
             return;
         }
 
         float frameDistance = dodgeDistance / Mathf.Max(0.01f, dodgeDuration) * Time.deltaTime;
         characterController.Move(dodgeDirection * frameDistance);
 
+        elapsedTime += Time.deltaTime;
         remainingTime -= Time.deltaTime;
+
         if (remainingTime <= 0f)
         {
-            IsDodging = false;
+            FinishDodge();
         }
+    }
+
+    private void FinishDodge()
+    {
+        remainingTime = 0f;
+        IsDodging = false;
     }
 }
