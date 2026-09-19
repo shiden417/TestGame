@@ -1,11 +1,13 @@
-using UnityEngine;
 using UnityEngine.InputSystem;
+
+using UnityEngine;
 
 [DisallowMultipleComponent]
 public sealed class GameInput : MonoBehaviour
 {
     public InputAction Move { get; private set; } = null!;
     public InputAction Look { get; private set; } = null!;
+    public InputAction MouseLook { get; private set; } = null!;
     public InputAction NormalAttack { get; private set; } = null!;
     public InputAction Dodge { get; private set; } = null!;
     public InputAction Jump { get; private set; } = null!;
@@ -58,7 +60,9 @@ public sealed class GameInput : MonoBehaviour
 
         Look = actionMap.AddAction("Look", InputActionType.Value, expectedControlType: "Vector2");
         Look.AddBinding("<Gamepad>/rightStick");
-        Look.AddBinding("<Mouse>/delta");
+
+        MouseLook = actionMap.AddAction("MouseLook", InputActionType.Value, expectedControlType: "Vector2");
+        MouseLook.AddBinding("<Mouse>/delta");
 
         NormalAttack = CreateButtonAction("NormalAttack", "<Gamepad>/rightTrigger", "<Mouse>/leftButton");
         Dodge = CreateButtonAction("Dodge", "<Gamepad>/rightShoulder", "<Keyboard>/leftShift");
