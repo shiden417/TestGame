@@ -11,6 +11,7 @@ A Unity 6 third-person action prototype focused on:
 - Lock-on
 - Stylish melee combat
 - Elite and boss encounters
+- A complete first vertical slice
 
 ## Source of Truth
 
@@ -26,19 +27,19 @@ Implementation status:
 
 `docs/IMPLEMENTATION_STATUS.md`
 
-Playtest checklist:
+Complete playtest checklist:
 
-`docs/PHASE1_PLAYTEST_CHECKLIST.md`
+`docs/VERTICAL_SLICE_PLAYTEST_CHECKLIST.md`
 
 ## Local Playtest
 
 1. Run `git pull`.
-2. Open Unity 6.2.2f1 or the project version recorded in `ProjectSettings/ProjectVersion.txt`.
+2. Open Unity 6000.6.2f1.
 3. Open `Assets/Scenes/PrototypeScene.unity`.
 4. Press Play.
 5. Connect/use a gamepad.
 
-The prototype builds its test battlefield at runtime, so manual scene object placement is not required.
+The prototype builds the battlefield, player, enemies, camera, HUD, visual effects, and audio feedback at runtime. Manual scene-object placement is not required.
 
 ## Gamepad Controls
 
@@ -58,10 +59,10 @@ Keyboard/mouse bindings remain available as development fallback.
 
 ## Development Rule
 
-Do not add features only because they are convenient to implement.
-
 Maintain the identity:
 
 **Future SF + Japanese-inspired design + high-speed action + crowd combat**
 
-When a change conflicts with the game-design specification, update the specification deliberately before changing the implementation.
+Before meaningful changes, read `docs/GAME_DESIGN.md`.
+
+When a change conflicts with the specification, update the specification deliberately before changing the implementation.
