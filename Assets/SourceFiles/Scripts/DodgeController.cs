@@ -46,15 +46,17 @@ public sealed class DodgeController : MonoBehaviour
 
     private void Update()
     {
-        if (input == null || characterController == null || cameraController == null)
+        if (input == null
+            || characterController == null
+            || cameraController == null)
         {
             return;
         }
 
-        if (cooldownTimer > 0f)
-        {
-            cooldownTimer = Mathf.Max(0f, cooldownTimer - Time.deltaTime);
-        }
+        cooldownTimer =
+            Mathf.Max(
+                0f,
+                cooldownTimer - Time.deltaTime);
 
         if (IsDodging)
         {
@@ -72,8 +74,11 @@ public sealed class DodgeController : MonoBehaviour
 
     private void StartDodge()
     {
-        Vector2 moveInput = input.Move.ReadValue<Vector2>();
-        Vector3 direction = cameraController.Right * moveInput.x
+        Vector2 moveInput =
+            input.Move.ReadValue<Vector2>();
+
+        Vector3 direction =
+            cameraController.Right * moveInput.x
             + cameraController.Forward * moveInput.y;
 
         if (direction.sqrMagnitude < 0.01f)
@@ -82,14 +87,18 @@ public sealed class DodgeController : MonoBehaviour
         }
 
         direction.y = 0f;
-        dodgeDirection = direction.sqrMagnitude > 0.01f
-            ? direction.normalized
-            : -transform.forward;
+
+        dodgeDirection =
+            direction.sqrMagnitude > 0.01f
+                ? direction.normalized
+                : -transform.forward;
 
         remainingTime = dodgeDuration;
         elapsedTime = 0f;
         IsDodging = true;
         cooldownTimer = dodgeCooldown;
+
+        AudioDirector.Instance?.PlayDodge();
     }
 
     private void UpdateDodge()
@@ -100,8 +109,13 @@ public sealed class DodgeController : MonoBehaviour
             return;
         }
 
-        float frameDistance = dodgeDistance / Mathf.Max(0.01f, dodgeDuration) * Time.deltaTime;
-        characterController.Move(dodgeDirection * frameDistance);
+        float frameDistance =
+            dodgeDistance
+            / Mathf.Max(0.01f, dodgeDuration)
+            * Time.deltaTime;
+
+        characterController.Move(
+            dodgeDirection * frameDistance);
 
         elapsedTime += Time.deltaTime;
         remainingTime -= Time.deltaTime;
