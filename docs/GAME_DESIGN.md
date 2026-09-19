@@ -130,13 +130,24 @@ The initial protagonist is:
 
 **A high-speed melee combatant from the ruined future world.**
 
-Visual direction:
+The protagonist is not a historical samurai. He is a future warrior whose combat equipment evolved from Japanese sword and armor design.
 
-- Futuristic combat clothing.
-- Japanese-inspired armor elements.
-- Distinctive silhouette.
-- Energy-enhanced melee weapon.
-- Strong visual effects during attacks.
+Visual identity:
+
+- Compact futuristic combat suit.
+- Dark graphite and deep blue-gray base.
+- Muted crimson identity accents.
+- Cyan energy systems.
+- Sealed visor and distinctive crest.
+- Asymmetric shoulders, with heavier protection on the sword side.
+- Layered waist armor inspired by segmented Japanese armor.
+- Compact rear energy unit and fins.
+- Waist-mounted sword sheath.
+- Energy blade that activates during combat.
+
+The intended silhouette is narrow-waisted, agile, asymmetric, and immediately readable in a large crowd.
+
+Detailed art direction is defined in docs/PLAYER_CHARACTER_ART_DIRECTION.md.
 
 The first playable character should be completed before expanding to multiple characters.
 
