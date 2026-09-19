@@ -33,7 +33,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
 
         visualRoot.localPosition = Vector3.zero;
         visualRoot.localRotation = Quaternion.identity;
-        visualRoot.localScale = new Vector3(1f, 0.58f, 1f);
+        visualRoot.localScale = Vector3.one;
 
         CreateCoreBody(visualRoot);
         CreateHead(visualRoot);
@@ -46,6 +46,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
         CreateBackUnit(visualRoot);
         CreateEnergyLines(visualRoot);
         CreateSwordMount(visualRoot);
+        CreateSilhouetteDetails(visualRoot);
     }
 
     private void CreateCoreBody(Transform parent)
@@ -409,6 +410,79 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             new Vector3(0f, 0.02f, 0.36f),
             new Vector3(0.055f, 0.62f, 0.035f),
             new Color(0.1f, 0.86f, 1f));
+    }
+
+    private void CreateSilhouetteDetails(Transform parent)
+    {
+        CreateCube(
+            "JawPlate",
+            parent,
+            new Vector3(0f, 1.04f, 0.22f),
+            new Vector3(0.34f, 0.18f, 0.2f),
+            new Color(0.06f, 0.075f, 0.1f));
+
+        CreateCube(
+            "VisorCore",
+            parent,
+            new Vector3(0f, 1.17f, 0.335f),
+            new Vector3(0.24f, 0.045f, 0.028f),
+            new Color(0.2f, 0.95f, 1f));
+
+        CreateCube(
+            "ChestCenterPlate",
+            parent,
+            new Vector3(0f, 0.48f, 0.46f),
+            new Vector3(0.18f, 0.42f, 0.055f),
+            new Color(0.07f, 0.1f, 0.14f));
+
+        CreateCube(
+            "RightChestRedAccent",
+            parent,
+            new Vector3(0.28f, 0.62f, 0.43f),
+            new Vector3(0.055f, 0.23f, 0.045f),
+            new Color(0.62f, 0.035f, 0.09f));
+
+        CreateCube(
+            "LeftHipFin",
+            parent,
+            new Vector3(-0.5f, -0.38f, -0.02f),
+            new Vector3(0.12f, 0.38f, 0.32f),
+            new Color(0.08f, 0.1f, 0.14f));
+
+        CreateCube(
+            "RightHipFin",
+            parent,
+            new Vector3(0.5f, -0.38f, -0.02f),
+            new Vector3(0.12f, 0.38f, 0.32f),
+            new Color(0.12f, 0.08f, 0.12f));
+
+        CreateCube(
+            "LeftBootToe",
+            parent,
+            new Vector3(-0.3f, -1.76f, 0.48f),
+            new Vector3(0.34f, 0.16f, 0.28f),
+            new Color(0.045f, 0.055f, 0.075f));
+
+        CreateCube(
+            "RightBootToe",
+            parent,
+            new Vector3(0.3f, -1.76f, 0.48f),
+            new Vector3(0.34f, 0.16f, 0.28f),
+            new Color(0.045f, 0.055f, 0.075f));
+
+        CreateCube(
+            "BackSpine",
+            parent,
+            new Vector3(0f, 0.34f, -0.68f),
+            new Vector3(0.12f, 0.75f, 0.08f),
+            new Color(0.08f, 0.13f, 0.18f));
+
+        CreateCube(
+            "BackSpineLight",
+            parent,
+            new Vector3(0f, 0.34f, -0.73f),
+            new Vector3(0.045f, 0.55f, 0.025f),
+            new Color(0.05f, 0.85f, 1f));
     }
 
     private static void CreateCube(
