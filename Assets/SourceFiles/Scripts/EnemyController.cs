@@ -38,7 +38,6 @@ public sealed class EnemyController : MonoBehaviour
     private float hitStunTimer;
     private float knockbackTimer;
     private Vector3 knockbackVelocity;
-    private Color hitRestoreColor;
     private float hitFlashTimer;
 
     public EnemyType Type => enemyType;
@@ -84,13 +83,13 @@ public sealed class EnemyController : MonoBehaviour
         {
             targetMaterial = targetRenderer.material;
             baseColor = targetMaterial.color;
-            hitRestoreColor = baseColor;
         }
     }
 
     private void Awake()
     {
         targetRenderer = GetComponentInChildren<Renderer>();
+
         if (targetRenderer != null)
         {
             targetMaterial = targetRenderer.material;
@@ -100,12 +99,19 @@ public sealed class EnemyController : MonoBehaviour
 
     private void Update()
     {
-        if (!IsAlive || player == null)
+        if (!IsAlive || player == null || battleDirector == null)
         {
             return;
         }
 
+        bool attackWasCommitted = attackWindupTimer > 0f;
         UpdateTimers();
+
+        if (attackWasCommitted && attackWindupTimer <= 0f)
+        {
+            ExecuteAttack();
+            return;
+        }
 
         if (knockbackTimer > 0f)
         {
@@ -130,28 +136,31 @@ public sealed class EnemyController : MonoBehaviour
         if (attackWindupTimer > 0f)
         {
             FaceDirection(offset);
-
-            if (attackWindupTimer <= 0f)
-            {
-                ExecuteAttack();
-            }
-
             return;
         }
 
         if (distance > attackRange)
         {
-            float desiredDistance = Mathf.Max(stopDistance, attackRange * 0.7f);
-            Vector3 moveDirection = distance > desiredDistance ? offset.normalized : Vector3.zero;
+            float desiredDistance = Mathf.Max(
+                stopDistance,
+                attackRange * 0.7f);
 
-            transform.position += moveDirection * moveSpeed * Time.deltaTime;
+            Vector3 moveDirection =
+                distance > desiredDistance
+                    ? offset.normalized
+                    : Vector3.zero;
+
+            transform.position +=
+                moveDirection * moveSpeed * Time.deltaTime;
+
             FaceDirection(moveDirection);
             return;
         }
 
         FaceDirection(offset);
 
-        if (attackTimer <= 0f && battleDirector.CanEnemyAttack(this))
+        if (attackTimer <= 0f
+            && battleDirector.CanEnemyAttack(this))
         {
             attackWindupTimer = attackWindup;
         }
@@ -159,13 +168,24 @@ public sealed class EnemyController : MonoBehaviour
 
     private void UpdateTimers()
     {
-        attackTimer = Mathf.Max(0f, attackTimer - Time.deltaTime);
-        attackWindupTimer = Mathf.Max(0f, attackWindupTimer - Time.deltaTime);
-        hitStunTimer = Mathf.Max(0f, hitStunTimer - Time.deltaTime);
+        attackTimer = Mathf.Max(
+            0f,
+            attackTimer - Time.deltaTime);
+
+        attackWindupTimer = Mathf.Max(
+            0f,
+            attackWindupTimer - Time.deltaTime);
+
+        hitStunTimer = Mathf.Max(
+            0f,
+            hitStunTimer - Time.deltaTime);
 
         if (knockbackTimer > 0f)
         {
-            knockbackTimer = Mathf.Max(0f, knockbackTimer - Time.deltaTime);
+            knockbackTimer = Mathf.Max(
+                0f,
+                knockbackTimer - Time.deltaTime);
+
             knockbackVelocity = Vector3.Lerp(
                 knockbackVelocity,
                 Vector3.zero,
@@ -174,11 +194,14 @@ public sealed class EnemyController : MonoBehaviour
 
         if (hitFlashTimer > 0f)
         {
-            hitFlashTimer = Mathf.Max(0f, hitFlashTimer - Time.deltaTime);
+            hitFlashTimer = Mathf.Max(
+                0f,
+                hitFlashTimer - Time.deltaTime);
 
             if (targetMaterial != null)
             {
                 float normalized = hitFlashTimer / 0.08f;
+
                 targetMaterial.color = Color.Lerp(
                     baseColor,
                     Color.white,
@@ -196,29 +219,94 @@ public sealed class EnemyController : MonoBehaviour
             playerHealth = player.GetComponent<PlayerHealth>();
         }
 
-        if (playerHealth != null && playerHealth.IsAlive)
+        if (playerHealth == null || !playerHealth.IsAlive)
         {
-            float distance = Vector3.Distance(
-                new Vector3(transform.position.x, 0f, transform.position.z),
-                new Vector3(player.position.x, 0f, player.position.z));
+            return;
+        }
 
-            if (distance <= attackRange * 1.25f)
-            {
-                playerHealth.TakeDamage(attackDamage);
-            }
+        float distance = Vector3.Distance(
+            new Vector3(
+                transform.position.x,
+                0f,
+                transform.position.z),
+            new Vector3(
+                player.position.x,
+                0f,
+                player.position.z));
+
+        if (IsBoss)
+        {
+            PerformBossAttack(distance);
+        }
+        else if (distance <= attackRange * 1.25f)
+        {
+            playerHealth.TakeDamage(attackDamage);
         }
 
         CreateAttackFlash();
     }
 
-    public void TakeDamage(float damage, Vector3 hitDirection, bool applyKnockback)
+    private void PerformBossAttack(float distance)
+    {
+        if (distance <= attackRange * 1.35f)
+        {
+            playerHealth.TakeDamage(attackDamage);
+        }
+
+        GameObject shockwave =
+            GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+
+        shockwave.name = "BossShockwave";
+        shockwave.transform.position =
+            transform.position + Vector3.up * 0.06f;
+
+        shockwave.transform.localScale =
+            new Vector3(3.6f, 0.04f, 3.6f);
+
+        Collider collider = shockwave.GetComponent<Collider>();
+        if (collider != null)
+        {
+            Destroy(collider);
+        }
+
+        Renderer renderer =
+            shockwave.GetComponent<Renderer>();
+
+        if (renderer != null)
+        {
+            Shader shader =
+                Shader.Find("Universal Render Pipeline/Lit")
+                ?? Shader.Find("Standard");
+
+            if (shader != null)
+            {
+                renderer.material =
+                    new Material(shader)
+                    {
+                        color =
+                            new Color(1f, 0.32f, 0.04f)
+                    };
+            }
+        }
+
+        Destroy(shockwave, 0.18f);
+    }
+
+    public void TakeDamage(
+        float damage,
+        Vector3 hitDirection,
+        bool applyKnockback)
     {
         if (!IsAlive || damage <= 0f)
         {
             return;
         }
 
-        currentHealth = Mathf.Max(0f, currentHealth - damage);
+        currentHealth =
+            Mathf.Max(
+                0f,
+                currentHealth - damage);
+
         hitStunTimer = hitStunDuration;
         hitFlashTimer = 0.08f;
 
@@ -231,10 +319,16 @@ public sealed class EnemyController : MonoBehaviour
             && !IsBoss
             && hitDirection.sqrMagnitude > 0.001f)
         {
-            float force = Mathf.Max(0f, 8f - knockbackResistance);
+            float force =
+                Mathf.Max(
+                    0f,
+                    8f - knockbackResistance);
+
             if (force > 0f)
             {
-                knockbackVelocity = hitDirection.normalized * force;
+                knockbackVelocity =
+                    hitDirection.normalized * force;
+
                 knockbackTimer = 0.12f;
             }
         }
@@ -302,19 +396,23 @@ public sealed class EnemyController : MonoBehaviour
             return;
         }
 
-        Quaternion desiredRotation = Quaternion.LookRotation(
-            direction.normalized,
-            Vector3.up);
+        Quaternion desiredRotation =
+            Quaternion.LookRotation(
+                direction.normalized,
+                Vector3.up);
 
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            desiredRotation,
-            14f * Time.deltaTime);
+        transform.rotation =
+            Quaternion.Slerp(
+                transform.rotation,
+                desiredRotation,
+                14f * Time.deltaTime);
     }
 
     private void CreateAttackFlash()
     {
-        GameObject flash = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        GameObject flash =
+            GameObject.CreatePrimitive(PrimitiveType.Cube);
+
         flash.name = "EnemyAttackTelegraph";
         flash.transform.position =
             transform.position
@@ -324,24 +422,31 @@ public sealed class EnemyController : MonoBehaviour
         flash.transform.localScale =
             new Vector3(0.45f, 0.12f, 0.7f);
 
-        Collider collider = flash.GetComponent<Collider>();
+        Collider collider =
+            flash.GetComponent<Collider>();
+
         if (collider != null)
         {
             Destroy(collider);
         }
 
-        Renderer renderer = flash.GetComponent<Renderer>();
+        Renderer renderer =
+            flash.GetComponent<Renderer>();
+
         if (renderer != null)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit")
+            Shader shader =
+                Shader.Find("Universal Render Pipeline/Lit")
                 ?? Shader.Find("Standard");
 
             if (shader != null)
             {
-                renderer.material = new Material(shader)
-                {
-                    color = new Color(1f, 0.12f, 0.12f)
-                };
+                renderer.material =
+                    new Material(shader)
+                    {
+                        color =
+                            new Color(1f, 0.12f, 0.12f)
+                    };
             }
         }
 
@@ -352,7 +457,7 @@ public sealed class EnemyController : MonoBehaviour
     {
         if (targetMaterial != null)
         {
-            targetMaterial.color = hitRestoreColor;
+            targetMaterial.color = baseColor;
         }
     }
 }
