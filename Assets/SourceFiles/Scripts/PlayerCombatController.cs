@@ -300,8 +300,8 @@ public sealed class PlayerCombatController : MonoBehaviour
         }
 
         weaponVisual.transform.SetParent(transform, false);
-        weaponVisual.transform.localPosition = new Vector3(0.64f, -0.04f, 0.24f);
-        weaponVisual.transform.localRotation = Quaternion.Euler(0f, -24f, 12f);
+        weaponVisual.transform.localPosition = new Vector3(0.58f, -0.02f, 0.18f);
+        weaponVisual.transform.localRotation = Quaternion.Euler(-8f, -20f, 12f);
 
         Shader shader =
             Shader.Find("Universal Render Pipeline/Lit")
@@ -325,7 +325,7 @@ public sealed class PlayerCombatController : MonoBehaviour
             "EnergyBladeGlow",
             weaponVisual.transform,
             new Vector3(0f, 0f, 0.76f),
-            new Vector3(0.16f, 0.13f, 1.62f));
+            new Vector3(0.12f, 0.10f, 1.72f));
 
         bladeGlowMaterial = new Material(shader)
         {
@@ -339,7 +339,7 @@ public sealed class PlayerCombatController : MonoBehaviour
             "EnergyBlade",
             weaponVisual.transform,
             new Vector3(0f, 0f, 0.78f),
-            new Vector3(0.085f, 0.075f, 1.55f));
+            new Vector3(0.055f, 0.055f, 1.68f));
 
         weaponMaterial = new Material(shader)
         {
@@ -348,11 +348,31 @@ public sealed class PlayerCombatController : MonoBehaviour
         ConfigureMaterial(weaponMaterial, true);
         blade.GetComponent<Renderer>().material = weaponMaterial;
 
+        GameObject bladeEdge = CreateWeaponPart(
+            "EnergyBladeEdge",
+            weaponVisual.transform,
+            new Vector3(0f, 0.02f, 0.88f),
+            new Vector3(0.025f, 0.035f, 1.35f));
+
+        ApplyWeaponMaterial(
+            bladeEdge,
+            new Color(0.55f, 0.98f, 1f));
+
+        GameObject bladeTip = CreateWeaponPart(
+            "EnergyBladeTip",
+            weaponVisual.transform,
+            new Vector3(0f, 0.02f, 1.68f),
+            new Vector3(0.07f, 0.07f, 0.22f));
+
+        ApplyWeaponMaterial(
+            bladeTip,
+            new Color(0.25f, 0.92f, 1f));
+
         GameObject guard = CreateWeaponPart(
             "EnergyBladeGuard",
             weaponVisual.transform,
             new Vector3(0f, 0f, 0.06f),
-            new Vector3(0.34f, 0.065f, 0.09f));
+            new Vector3(0.38f, 0.055f, 0.075f));
 
         ApplyWeaponMaterial(guard, new Color(0.72f, 0.55f, 0.18f));
 
