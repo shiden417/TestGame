@@ -19,7 +19,10 @@ public sealed class PlayerController : MonoBehaviour
     private Vector3 horizontalVelocity;
     private float verticalVelocity;
 
-    public bool IsGrounded => characterController != null && characterController.isGrounded;\n    public float CurrentSpeed => new Vector3(horizontalVelocity.x, 0f, horizontalVelocity.z).magnitude;\n    public float MaxMoveSpeed => moveSpeed;\n    public Vector3 MovementVelocity => horizontalVelocity;
+    public bool IsGrounded => characterController != null && characterController.isGrounded;
+    public float CurrentSpeed => new Vector3(horizontalVelocity.x, 0f, horizontalVelocity.z).magnitude;
+    public float MaxMoveSpeed => moveSpeed;
+    public Vector3 MovementVelocity => horizontalVelocity;
 
     public void Initialize(
         GameInput gameInput,
