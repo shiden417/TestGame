@@ -21,6 +21,7 @@ public sealed class PlayerSkillController : MonoBehaviour
     private float ultimateGauge;
     private GameObject skillVisual;
     private float visualLifetime;
+    private float visualDuration;
 
     public float Skill1Remaining => skill1Timer;
     public float Skill2Remaining => skill2Timer;
@@ -289,25 +290,80 @@ public sealed class PlayerSkillController : MonoBehaviour
             Destroy(skillVisual);
         }
 
-        skillVisual =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cylinder);
+        skillVisual = new GameObject("SkillEffect");
 
-        skillVisual.name =
-            "SkillEffect";
+        if (skillVisual == null)
+        {
+            throw new System.InvalidOperationException(
+                "Failed to create skill visual.");
+        }
 
         skillVisual.transform.position =
             transform.position
-            + Vector3.up * 0.05f;
+            + Vector3.up * 0.08f;
+
+        CreateSkillSegment(
+            "Front",
+            skillVisual.transform,
+            new Vector3(0f, 0f, range * 0.5f),
+            new Vector3(range, 0.05f, 0.09f),
+            color);
+
+        CreateSkillSegment(
+            "Back",
+            skillVisual.transform,
+            new Vector3(0f, 0f, -range * 0.5f),
+            new Vector3(range, 0.05f, 0.09f),
+            color);
+
+        CreateSkillSegment(
+            "Left",
+            skillVisual.transform,
+            new Vector3(-range * 0.5f, 0f, 0f),
+            new Vector3(0.09f, 0.05f, range),
+            color);
+
+        CreateSkillSegment(
+            "Right",
+            skillVisual.transform,
+            new Vector3(range * 0.5f, 0f, 0f),
+            new Vector3(0.09f, 0.05f, range),
+            color);
 
         skillVisual.transform.localScale =
-            new Vector3(
-                range * 2f,
-                0.05f,
-                range * 2f);
+            Vector3.one * 0.45f;
+
+        visualDuration =
+            Mathf.Max(0.01f, duration);
+
+        visualLifetime =
+            visualDuration;
+    }
+
+    private static void CreateSkillSegment(
+        string objectName,
+        Transform parent,
+        Vector3 localPosition,
+        Vector3 localScale,
+        Color color)
+    {
+        GameObject segment =
+            GameObject.CreatePrimitive(
+                PrimitiveType.Cube);
+
+        if (segment == null)
+        {
+            throw new System.InvalidOperationException(
+                $"Failed to create skill segment: {objectName}");
+        }
+
+        segment.name = objectName;
+        segment.transform.SetParent(parent, false);
+        segment.transform.localPosition = localPosition;
+        segment.transform.localScale = localScale;
 
         Collider collider =
-            skillVisual.GetComponent<Collider>();
+            segment.GetComponent<Collider>();
 
         if (collider != null)
         {
@@ -315,27 +371,49 @@ public sealed class PlayerSkillController : MonoBehaviour
         }
 
         Renderer renderer =
-            skillVisual.GetComponent<Renderer>();
+            segment.GetComponent<Renderer>();
 
-        if (renderer != null)
+        if (renderer == null)
         {
-            Shader shader =
-                Shader.Find(
-                    "Universal Render Pipeline/Lit")
-                ?? Shader.Find("Standard");
-
-            if (shader != null)
-            {
-                renderer.material =
-                    new Material(shader)
-                    {
-                        color = color
-                    };
-            }
+            throw new System.InvalidOperationException(
+                $"Skill segment renderer was not created: {objectName}");
         }
 
-        visualLifetime =
-            Mathf.Max(0f, duration);
+        Shader shader =
+            Shader.Find("Universal Render Pipeline/Lit")
+            ?? Shader.Find("Standard");
+
+        if (shader == null)
+        {
+            throw new System.InvalidOperationException(
+                "No compatible Unity material shader was found.");
+        }
+
+        Material material =
+            new Material(shader)
+            {
+                color = color
+            };
+
+        if (material.HasProperty("_Metallic"))
+        {
+            material.SetFloat("_Metallic", 0.15f);
+        }
+
+        if (material.HasProperty("_Smoothness"))
+        {
+            material.SetFloat("_Smoothness", 0.9f);
+        }
+
+        if (material.HasProperty("_EmissionColor"))
+        {
+            material.EnableKeyword("_EMISSION");
+            material.SetColor(
+                "_EmissionColor",
+                color * 1.8f);
+        }
+
+        renderer.material = material;
     }
 
     private void UpdateVisualLifetime()
@@ -347,12 +425,36 @@ public sealed class PlayerSkillController : MonoBehaviour
 
         skillVisual.transform.position =
             transform.position
-            + Vector3.up * 0.05f;
+            + Vector3.up * 0.08f;
+
+        float elapsed01 =
+            1f
+            - Mathf.Clamp01(
+                visualLifetime
+                / Mathf.Max(0.01f, visualDuration));
+
+        float scale =
+            Mathf.Lerp(
+                0.45f,
+                1.12f,
+                elapsed01);
+
+        float pulse =
+            1f
+            + Mathf.Sin(
+                elapsed01 * Mathf.PI * 4f)
+            * 0.08f;
+
+        skillVisual.transform.localScale =
+            Vector3.one
+            * scale
+            * pulse;
 
         skillVisual.transform.Rotate(
             0f,
             420f * Time.unscaledDeltaTime,
-            0f);
+            0f,
+            Space.Self);
 
         visualLifetime -=
             Time.unscaledDeltaTime;
