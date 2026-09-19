@@ -195,3 +195,26 @@ When production art replaces it, preserve:
 7. fast-action mobility.
 
 Those seven elements define the protagonist's visual identity and should survive future model replacements.
+
+
+## Refined Motion Language
+
+The protagonist should read as a light, high-speed swordsman even when standing still.
+
+Movement presentation:
+
+- The torso leans slightly into acceleration.
+- The upper body settles during deceleration rather than stopping abruptly.
+- Running uses a restrained shoulder and leg rhythm.
+- Head movement remains controlled so the visor stays readable.
+- Sword-side movement must remain unobstructed.
+- Dodge compresses the silhouette briefly, then releases into a fast directional finish.
+- Attacks use distinct three-step arcs rather than one repeated swing.
+- Skill effects expand outward and fade quickly so combat remains readable.
+- Energy conduits visibly pulse during attacks, dodge, and ability activation.
+
+The motion should feel:
+
+**Light -> Immediate -> Precise -> Explosive**
+
+Do not use heavy mechanical animation as the default. Large recoil, long anticipation, or slow recovery should be reserved for deliberately powerful abilities or boss-scale presentation.
