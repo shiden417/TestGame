@@ -3,18 +3,18 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class ThirdPersonCameraController : MonoBehaviour
 {
-    [SerializeField] private float followDistance = 7f;
-    [SerializeField] private float followHeight = 2.1f;
-    [SerializeField] private float lookHeight = 1.2f;
+    [SerializeField] private float followDistance = 6.4f;
+    [SerializeField] private float followHeight = 1.95f;
+    [SerializeField] private float lookHeight = 1.15f;
     [SerializeField] private float lookSensitivity = 160f;
     [SerializeField] private float mouseSensitivity = 0.08f;
     [SerializeField] private float minPitch = -15f;
     [SerializeField] private float maxPitch = 55f;
     [SerializeField] private float positionSmoothTime = 0.08f;
-    [SerializeField] private float rotationSmoothSpeed = 18f;
+    [SerializeField] private float rotationSmoothSpeed = 22f;
     [SerializeField] private float lockOnRotationSpeed = 8f;
     [SerializeField] private float collisionRadius = 0.2f;
-    [SerializeField] private float minimumDistance = 1.5f;
+    [SerializeField] private float minimumDistance = 1.35f;\n    [SerializeField] private float shoulderOffset = 0.38f;\n    [SerializeField] private float baseFieldOfView = 62f;\n    [SerializeField] private float movementFovGain = 3.5f;\n    [SerializeField] private float dodgeFovGain = 6f;\n\n    private PlayerController playerController;\n    private DodgeController dodgeController;\n    private Camera targetCamera;
 
     private Transform target;
     private TargetingSystem targetingSystem;
@@ -157,6 +157,32 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
             transform.rotation,
             desiredRotation,
             rotationSmoothSpeed * Time.deltaTime);
+    }
+
+    private void UpdateFieldOfView()
+    {
+        if (targetCamera == null)
+        {
+            return;
+        }
+
+        float move01 = playerController != null
+            ? Mathf.Clamp01(playerController.CurrentSpeed / Mathf.Max(0.01f, playerController.MaxMoveSpeed))
+            : 0f;
+
+        float dodge01 = dodgeController != null && dodgeController.IsDodging
+            ? Mathf.Sin(Mathf.PI * dodgeController.DodgeProgress)
+            : 0f;
+
+        float desiredFov =
+            baseFieldOfView
+            + movementFovGain * move01
+            + dodgeFovGain * dodge01;
+
+        targetCamera.fieldOfView = Mathf.Lerp(
+            targetCamera.fieldOfView,
+            desiredFov,
+            8f * Time.unscaledDeltaTime);
     }
 
     private Vector3 ResolveCameraCollision(Vector3 focusPoint, Vector3 desiredPosition)
