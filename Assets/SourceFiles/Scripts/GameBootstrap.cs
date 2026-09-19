@@ -81,6 +81,14 @@ public sealed class GameBootstrap : MonoBehaviour
                 0.34f,
                 0.55f));
 
+        Renderer placeholderRenderer =
+            playerObject.GetComponent<Renderer>();
+
+        if (placeholderRenderer != null)
+        {
+            placeholderRenderer.enabled = false;
+        }
+
         Collider primitiveCollider =
             playerObject.GetComponent<Collider>();
 
