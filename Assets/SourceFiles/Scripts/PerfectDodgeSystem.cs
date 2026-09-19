@@ -9,10 +9,11 @@ public sealed class PerfectDodgeSystem : MonoBehaviour
     [SerializeField] private float counterWindow = 0.85f;
 
     private DodgeController dodgeController;
-    private float previousDodgeStateTimer;
+    private float counterTimer;
     private float slowMotionTimer;
+    private bool timeScaleOwned;
 
-    public bool CounterWindowActive { get; private set; }
+    public bool CounterWindowActive => counterTimer > 0f;
     public bool WasPerfectDodge { get; private set; }
 
     public void Initialize(DodgeController dodge)
@@ -35,19 +36,19 @@ public sealed class PerfectDodgeSystem : MonoBehaviour
         if (slowMotionTimer > 0f)
         {
             slowMotionTimer -= Time.unscaledDeltaTime;
-            if (slowMotionTimer <= 0f)
+
+            if (slowMotionTimer <= 0f && timeScaleOwned)
             {
-                Time.timeScale = 1f;
-                Time.fixedDeltaTime = 0.02f;
+                RestoreTimeScale();
             }
         }
 
-        if (CounterWindowActive)
+        if (counterTimer > 0f)
         {
-            previousDodgeStateTimer -= Time.unscaledDeltaTime;
-            if (previousDodgeStateTimer <= 0f)
+            counterTimer = Mathf.Max(0f, counterTimer - Time.unscaledDeltaTime);
+
+            if (counterTimer <= 0f)
             {
-                CounterWindowActive = false;
                 WasPerfectDodge = false;
             }
         }
@@ -68,11 +69,26 @@ public sealed class PerfectDodgeSystem : MonoBehaviour
     private void TriggerPerfectDodge()
     {
         WasPerfectDodge = true;
-        CounterWindowActive = true;
-        previousDodgeStateTimer = counterWindow;
-
+        counterTimer = counterWindow;
         slowMotionTimer = slowMotionDuration;
+
         Time.timeScale = slowMotionScale;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
+        timeScaleOwned = true;
+    }
+
+    private void RestoreTimeScale()
+    {
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = 0.02f;
+        timeScaleOwned = false;
+    }
+
+    private void OnDestroy()
+    {
+        if (timeScaleOwned)
+        {
+            RestoreTimeScale();
+        }
     }
 }
