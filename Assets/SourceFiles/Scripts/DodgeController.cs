@@ -13,11 +13,15 @@ public sealed class DodgeController : MonoBehaviour
     private float cooldownTimer;
     private float remainingTime;
     private float elapsedTime;
-    private Vector3 dodgeDirection;\n    private float dodgeProgress;\n    private float previousDodgeDistance;
+    private Vector3 dodgeDirection;
+    private float dodgeProgress;
+    private float previousDodgeDistance;
 
     public bool IsDodging { get; private set; }
     public bool IsInvulnerable => IsDodging;
-    public float DodgeElapsedTime => elapsedTime;\n    public float DodgeProgress => dodgeProgress;\n    public Vector3 DodgeDirection => dodgeDirection;
+    public float DodgeElapsedTime => elapsedTime;
+    public float DodgeProgress => dodgeProgress;
+    public Vector3 DodgeDirection => dodgeDirection;
 
     public void Initialize(
         CharacterController controller,
