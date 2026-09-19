@@ -15,7 +15,6 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
     [SerializeField] private float lockOnRotationSpeed = 8f;
     [SerializeField] private float collisionRadius = 0.2f;
     [SerializeField] private float minimumDistance = 1.35f;
-    [SerializeField] private float shoulderOffset = 0.46f;
     [SerializeField] private float baseFieldOfView = 58f;
     [SerializeField] private float movementFovGain = 4.5f;
     [SerializeField] private float dodgeFovGain = 9f;
