@@ -290,7 +290,7 @@ public sealed class PlayerCombatController : MonoBehaviour
         }
     }
 
-    private static void ApplyHitImpulse(Vector3 direction)
+    private void ApplyHitImpulse(Vector3 direction)
     {
         Time.timeScale = 0.035f;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
