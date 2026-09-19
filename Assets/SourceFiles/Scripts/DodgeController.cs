@@ -13,11 +13,11 @@ public sealed class DodgeController : MonoBehaviour
     private float cooldownTimer;
     private float remainingTime;
     private float elapsedTime;
-    private Vector3 dodgeDirection;
+    private Vector3 dodgeDirection;\n    private float dodgeProgress;\n    private float previousDodgeDistance;
 
     public bool IsDodging { get; private set; }
     public bool IsInvulnerable => IsDodging;
-    public float DodgeElapsedTime => elapsedTime;
+    public float DodgeElapsedTime => elapsedTime;\n    public float DodgeProgress => dodgeProgress;\n    public Vector3 DodgeDirection => dodgeDirection;
 
     public void Initialize(
         CharacterController controller,
@@ -109,16 +109,32 @@ public sealed class DodgeController : MonoBehaviour
             return;
         }
 
-        float frameDistance =
-            dodgeDistance
-            / Mathf.Max(0.01f, dodgeDuration)
-            * Time.deltaTime;
-
-        characterController.Move(
-            dodgeDirection * frameDistance);
-
         elapsedTime += Time.deltaTime;
         remainingTime -= Time.deltaTime;
+
+        dodgeProgress = Mathf.Clamp01(
+            elapsedTime / Mathf.Max(0.01f, dodgeDuration));
+
+        float easedProgress =
+            1f - Mathf.Pow(1f - dodgeProgress, 3f);
+
+        float distanceDelta =
+            (easedProgress * dodgeDistance)
+            - previousDodgeDistance;
+
+        previousDodgeDistance = easedProgress * dodgeDistance;
+
+        characterController.Move(
+            dodgeDirection * distanceDelta);
+
+        Quaternion targetRotation = Quaternion.LookRotation(
+            dodgeDirection,
+            Vector3.up);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            22f * Time.deltaTime);
 
         if (remainingTime <= 0f)
         {
