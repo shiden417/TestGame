@@ -20,6 +20,7 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
     private TargetingSystem targetingSystem;
     private GameInput input;
     private Vector3 positionVelocity;
+    private readonly RaycastHit[] cameraCollisionHits = new RaycastHit[16];
     private float yaw;
     private float pitch = 12f;
 
@@ -168,19 +169,48 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
 
         direction /= distance;
 
-        if (Physics.SphereCast(
+        int hitCount = Physics.SphereCastNonAlloc(
             focusPoint,
             collisionRadius,
             direction,
-            out RaycastHit hit,
+            cameraCollisionHits,
             distance,
             Physics.DefaultRaycastLayers,
-            QueryTriggerInteraction.Ignore))
+            QueryTriggerInteraction.Ignore);
+
+        float nearestDistance = distance;
+        bool hasCollision = false;
+
+        for (int i = 0; i < hitCount; i++)
         {
-            float safeDistance = Mathf.Max(minimumDistance, hit.distance - collisionRadius);
-            return focusPoint + direction * safeDistance;
+            Collider collider = cameraCollisionHits[i].collider;
+            if (collider == null || IsOwnedByTarget(collider.transform))
+            {
+                continue;
+            }
+
+            float hitDistance = cameraCollisionHits[i].distance;
+            if (hitDistance < nearestDistance)
+            {
+                nearestDistance = hitDistance;
+                hasCollision = true;
+            }
         }
 
-        return desiredPosition;
+        if (!hasCollision)
+        {
+            return desiredPosition;
+        }
+
+        float safeDistance = Mathf.Max(
+            minimumDistance,
+            nearestDistance - collisionRadius);
+
+        return focusPoint + direction * safeDistance;
+    }
+
+    private bool IsOwnedByTarget(Transform hitTransform)
+    {
+        return hitTransform == target || hitTransform.IsChildOf(target);
     }
 }
