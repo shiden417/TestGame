@@ -44,6 +44,7 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
         CreateWaistArmor(visualRoot);
         CreateBackUnit(visualRoot);
         CreateEnergyLines(visualRoot);
+        CreateSwordMount(visualRoot);
     }
 
     private void CreateCoreBody(Transform parent)
@@ -278,6 +279,38 @@ public sealed class PlayerAppearanceBuilder : MonoBehaviour
             new Vector3(0.3f, 0.33f, -0.45f),
             new Vector3(0.08f, 0.55f, 0.38f),
             new Color(0.16f, 0.19f, 0.25f));
+    }
+
+
+    private void CreateSwordMount(Transform parent)
+    {
+        CreateCapsule(
+            "SwordSheath",
+            parent,
+            new Vector3(-0.58f, -0.2f, -0.02f),
+            new Vector3(0.11f, 0.74f, 0.11f),
+            new Color(0.055f, 0.065f, 0.09f));
+
+        CreateCube(
+            "SwordSheathAccent",
+            parent,
+            new Vector3(-0.58f, 0.05f, 0.11f),
+            new Vector3(0.14f, 0.1f, 0.035f),
+            new Color(0.55f, 0.08f, 0.16f));
+
+        CreateCube(
+            "SwordHandle",
+            parent,
+            new Vector3(-0.58f, 0.24f, 0.22f),
+            new Vector3(0.11f, 0.43f, 0.1f),
+            new Color(0.18f, 0.19f, 0.22f));
+
+        CreateCube(
+            "SwordGuard",
+            parent,
+            new Vector3(-0.58f, 0.02f, 0.24f),
+            new Vector3(0.3f, 0.06f, 0.08f),
+            new Color(0.72f, 0.55f, 0.18f));
     }
 
     private void CreateEnergyLines(Transform parent)
