@@ -4,10 +4,10 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 7.5f;
-    [SerializeField] private float acceleration = 38f;
-    [SerializeField] private float deceleration = 48f;
-    [SerializeField] private float rotationSpeed = 24f;
+    [SerializeField] private float moveSpeed = 8.6f;
+    [SerializeField] private float acceleration = 58f;
+    [SerializeField] private float deceleration = 72f;
+    [SerializeField] private float rotationSpeed = 30f;
     [SerializeField] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -22f;
 
