@@ -15,10 +15,10 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
     [SerializeField] private float lockOnRotationSpeed = 8f;
     [SerializeField] private float collisionRadius = 0.2f;
     [SerializeField] private float minimumDistance = 1.35f;
-    [SerializeField] private float shoulderOffset = 0.38f;
-    [SerializeField] private float baseFieldOfView = 62f;
-    [SerializeField] private float movementFovGain = 3.5f;
-    [SerializeField] private float dodgeFovGain = 6f;
+    [SerializeField] private float shoulderOffset = 0.46f;
+    [SerializeField] private float baseFieldOfView = 58f;
+    [SerializeField] private float movementFovGain = 4.5f;
+    [SerializeField] private float dodgeFovGain = 9f;
 
     private PlayerController playerController;
     private DodgeController dodgeController;
@@ -91,6 +91,7 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
 
         UpdateOrbit();
         FollowTarget();
+        UpdateFieldOfView();
     }
 
     private void UpdateOrbit()
@@ -139,7 +140,7 @@ public sealed class ThirdPersonCameraController : MonoBehaviour
         if (lockTarget != null)
         {
             Vector3 lockPoint = lockTarget.position + Vector3.up * lookHeight;
-            focusPoint = Vector3.Lerp(focusPoint, lockPoint, 0.42f);
+            focusPoint = Vector3.Lerp(focusPoint, lockPoint, 0.52f);
         }
 
         Vector3 desiredPosition = target.position
