@@ -6,7 +6,6 @@ public sealed class Targetable : MonoBehaviour
     [SerializeField] private string displayName = "Training Unit";
 
     private GameObject lockMarker;
-    private bool isLocked;
 
     public string DisplayName => displayName;
     public Transform AimPoint => transform;
@@ -19,7 +18,6 @@ public sealed class Targetable : MonoBehaviour
 
     public void SetLocked(bool locked)
     {
-        isLocked = locked;
         if (lockMarker != null)
         {
             lockMarker.SetActive(locked);
@@ -48,7 +46,6 @@ public sealed class Targetable : MonoBehaviour
         }
 
         lockMarker.SetActive(false);
-        isLocked = false;
     }
 
     private static Material CreateMaterial(Color color)
