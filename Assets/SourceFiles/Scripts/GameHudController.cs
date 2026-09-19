@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public sealed class GameHudController : MonoBehaviour
 {
     private Text statusText;
-    private Text combatText;
     private Text playerText;
     private Text bossText;
     private Text messageText;
@@ -25,7 +24,12 @@ public sealed class GameHudController : MonoBehaviour
         PlayerSkillController skillController,
         PerfectDodgeSystem perfect)
     {
-        if (flow == null || stage == null || battle == null || health == null || skillController == null || perfect == null)
+        if (flow == null
+            || stage == null
+            || battle == null
+            || health == null
+            || skillController == null
+            || perfect == null)
         {
             throw new System.ArgumentNullException("HUD dependency");
         }
@@ -53,16 +57,10 @@ public sealed class GameHudController : MonoBehaviour
 
         playerText.text =
             $"HP {Mathf.CeilToInt(playerHealth.CurrentHealth)} / {Mathf.CeilToInt(playerHealth.MaxHealth)}\n" +
-            $"ULT {Mathf.RoundToInt(skills.UltimateGauge)}%";
-
-        combatText.text =
-            "左スティック 移動   右スティック カメラ\n" +
-            "RT/R2 攻撃   RB/R1 回避   A/× ジャンプ\n" +
-            "X/□ スキル1   Y/△ スキル2   LB/L1 必殺技\n" +
-            "LT/L2 ロックオン   R3 ターゲット切替";
+            $"ULT {Mathf.RoundToInt(skills.UltimateGauge)}%    LV {gameFlow.PlayerLevel}    XP {gameFlow.Experience}/{gameFlow.ExperienceToNextLevel()}";
 
         bossText.text = battleDirector.HasLivingBoss()
-            ? $"BOSS HP {Mathf.CeilToInt(battleDirector.GetBossHealth())}"
+            ? $"OROCHI FRAME // HP {Mathf.CeilToInt(battleDirector.GetBossHealth())}"
             : string.Empty;
 
         if (perfectDodge.CounterWindowActive)
@@ -72,7 +70,14 @@ public sealed class GameHudController : MonoBehaviour
         else if (gameFlow.StageCompleted)
         {
             messageText.text =
-                $"MISSION CLEAR\nDEFEATED {gameFlow.LastStageScore}\nLEVEL {gameFlow.PlayerLevel}";
+                $"MISSION CLEAR\n" +
+                $"DEFEATED {gameFlow.LastStageScore}\n" +
+                $"LEVEL {gameFlow.PlayerLevel}\n" +
+                $"UPGRADE POINTS {gameFlow.UpgradePoints}";
+        }
+        else if (gameFlow.StageDefeated)
+        {
+            messageText.text = "MISSION FAILED";
         }
         else
         {
@@ -92,14 +97,62 @@ public sealed class GameHudController : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        statusText = CreateText(canvasObject.transform, "Status", new Vector2(36f, -30f), new Vector2(900f, 100f), 28);
-        playerText = CreateText(canvasObject.transform, "Player", new Vector2(36f, -150f), new Vector2(500f, 100f), 26);
-        combatText = CreateText(canvasObject.transform, "Combat", new Vector2(36f, 1020f), new Vector2(900f, 180f), 21);
-        bossText = CreateText(canvasObject.transform, "Boss", new Vector2(1050f, -40f), new Vector2(700f, 80f), 30);
-        messageText = CreateText(canvasObject.transform, "Message", new Vector2(760f, -75f), new Vector2(900f, 180f), 34);
+        statusText = CreateText(
+            canvasObject.transform,
+            "Status",
+            new Vector2(36f, -30f),
+            new Vector2(1100f, 100f),
+            28);
+
+        playerText = CreateText(
+            canvasObject.transform,
+            "Player",
+            new Vector2(36f, -150f),
+            new Vector2(650f, 100f),
+            24);
+
+        bossText = CreateText(
+            canvasObject.transform,
+            "Boss",
+            new Vector2(-36f, -40f),
+            new Vector2(900f, 100f),
+            30);
+
+        bossText.rectTransform.anchorMin = new Vector2(1f, 1f);
+        bossText.rectTransform.anchorMax = new Vector2(1f, 1f);
+        bossText.rectTransform.pivot = new Vector2(1f, 1f);
+        bossText.rectTransform.anchoredPosition = new Vector2(-36f, -40f);
+        bossText.alignment = TextAnchor.UpperRight;
+
+        messageText = CreateText(
+            canvasObject.transform,
+            "Message",
+            new Vector2(0f, -70f),
+            new Vector2(1100f, 220f),
+            34);
 
         messageText.alignment = TextAnchor.UpperCenter;
-        bossText.alignment = TextAnchor.UpperRight;
+        messageText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+        messageText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+        messageText.rectTransform.pivot = new Vector2(0.5f, 1f);
+        messageText.rectTransform.anchoredPosition = new Vector2(0f, -90f);
+
+        Text controls = CreateText(
+            canvasObject.transform,
+            "Controls",
+            new Vector2(36f, 1050f),
+            new Vector2(1100f, 180f),
+            20);
+
+        controls.text =
+            "左スティック 移動   右スティック カメラ   RT/R2 攻撃   RB/R1 回避\n" +
+            "A/× ジャンプ   X/□ スキル1   Y/△ スキル2   LB/L1 必殺技\n" +
+            "LT/L2 ロックオン   R3 ターゲット切替";
+
+        controls.rectTransform.anchorMin = new Vector2(0f, 0f);
+        controls.rectTransform.anchorMax = new Vector2(0f, 0f);
+        controls.rectTransform.pivot = new Vector2(0f, 0f);
+        controls.rectTransform.anchoredPosition = new Vector2(36f, 34f);
     }
 
     private static Text CreateText(
@@ -127,4 +180,3 @@ public sealed class GameHudController : MonoBehaviour
 
         return text;
     }
-}
